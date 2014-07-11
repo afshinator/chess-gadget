@@ -1,0 +1,22 @@
+{
+  "name": "vs-chess",
+  "version": "0.0.1",
+  "homepage": "",
+  "authors": [
+  ],
+  "description": "vs-chess",
+  "license": "All rights reserved",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1",
+    "underscore": "~1.6.0",
+    "versal-shared-modules": "*"
+  }
+}
