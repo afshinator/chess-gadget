@@ -1,0 +1,25 @@
+{
+  "name": "chess-gadget",
+  "version": "0.0.1",
+  "homepage": "https://github.com/Versal/chess-gadget",
+  "authors": [
+    "Shaohua Zhou <shao@versal.com>"
+  ],
+  "description": "Chess gadget",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "versal-component-runtime": "~0.2.2",
+    "versal-player-api": "*",
+    "jquery": "~2.1.1",
+    "underscore": "~1.6.0",
+    "platform": "Polymer/platform#~0.3.2"
+  }
+}

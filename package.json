@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "shared-modules": "git+ssh://git@github.com:Versal/shared-modules"
+    }
+}

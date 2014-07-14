@@ -1,0 +1,13 @@
+{
+  "username": "versal",
+  "name": "chess",
+  "version": "0.0.1",
+  "title": "Chess",
+  "description": "Chess",
+  "author": "Versal",
+  "launcher": "iframe",
+  "defaultConfig": {
+    "memo": "Only authors can move"
+  },
+  "defaultUserState": {}
+}
