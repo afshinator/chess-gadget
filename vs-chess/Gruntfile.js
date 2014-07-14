@@ -1,9 +1,17 @@
 module.exports = function(grunt) {
+  // module dependencies
+  var join = require("path").join;
+
+  var options = {
+    path: '.',
+    name: 'vs-chess'
+  };
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     opts: {
-      path: '.',
-      name: 'vs-chess'
+      path: options.path,
+      name: options.name
     },
     vulcanize: { /* works but requires a modified version of vulcanize module */
       dev: {
@@ -26,5 +34,10 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-vulcanize');
 
-  grunt.registerTask('default', ['vulcanize']);
+  // need to create an empty dist folder
+  grunt.registerTask('mkdir_dist', function(){
+    grunt.file.mkdir( join(options.path, 'dist') );
+  });
+
+  grunt.registerTask('default', ['mkdir_dist', 'vulcanize']);
 };
