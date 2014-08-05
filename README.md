@@ -7,7 +7,7 @@ versal preview
 ```
 Note: npm install automatically runs the following command in postinstall hook
 ```
-bower install; cd vs-chess && npm install && bower install && grunt
+bower install && cd vs-chess && npm install && bower install && grunt && cd ..
 ```
 
 ### To develop
