@@ -32,9 +32,11 @@
     },
 
     save: function(){
-      this.trigger('vs-chess:change', {
-        position: this.board.position()
-      });
+      if(this.board) {
+        this.trigger('vs-chess:change', {
+          position: this.board.position()
+        });
+      }
     },
 
     toggleMouse: function(flag){
