@@ -6,9 +6,12 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/polymer/0.3.3/platform.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="versal-player-api/dist/api.js"></script>
 
-    <link rel="import" href="vs-chess/dist/vs-chess.html" />
+    <script src="eventEmitter/EventEmitter.js"></script>
+    <script src="versal-player-api/index.js"></script>
+
+    <!-- if publish to production, point to vs-chess/dist/vs-chess.html instead -->
+    <link rel="import" href="vs-chess/vs-chess.html" />
   </head>
   <body>
     <vs-chess><vs-chess>
