@@ -17,9 +17,8 @@
   ],
   "dependencies": {
     "versal-component-runtime": "~0.2.2",
-    "versal-player-api": "*",
+    "versal-player-api": "~0.3.3",
     "jquery": "~2.1.1",
-    "underscore": "~1.6.0",
-    "platform": "Polymer/platform#~0.3.2"
+    "underscore": "~1.6.0"
   }
 }
