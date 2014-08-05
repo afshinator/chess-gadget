@@ -50,7 +50,8 @@
     },
 
     toggleBoard: function(flag){
-      var position = this.config.position || 'start';
+      //this.config is undefined in detachedCallback for Chrome36
+      var position = (this.config && this.config.position) || 'start';
 
       var cfg = {
         draggable: flag,
