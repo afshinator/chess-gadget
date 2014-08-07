@@ -2,12 +2,12 @@ chess-gadget
 
 ### Install
 ```
-npm install
+bower install
 versal preview
 ```
-Note: npm install automatically runs the following command in postinstall hook
+Note: bower install automatically runs the following command in postinstall hook
 ```
-bower install && cd vs-chess && npm install && bower install && grunt && cd ..
+cd vs-chess && npm install && bower install && grunt && cd ..
 ```
 
 ### To develop
