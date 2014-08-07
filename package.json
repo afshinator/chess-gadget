@@ -1,8 +1,0 @@
-{
-  "devDependencies": {
-    "shared-modules": "git+ssh://git@github.com:Versal/shared-modules"
-  },
-  "scripts" : {
-    "postinstall" : "bower install && cd vs-chess && npm install && bower install && grunt && cd .."
-  }
-}
