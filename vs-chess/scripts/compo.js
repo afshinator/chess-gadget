@@ -3,9 +3,7 @@
 (function(){
 
   var _doc = (document._currentScript || document.currentScript).ownerDocument;
-  var _template = _doc.querySelector('template#vs-chess');
-  //todo
-  //using id is a temporary solution for template polluting between elements
+  var _template = _doc.querySelector('template#vs-chess-template');
 
   var Proto = Object.create(HTMLElement.prototype, BaseCompMethods.propertiesObject);
 
