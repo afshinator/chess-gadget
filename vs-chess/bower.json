@@ -16,6 +16,6 @@
   "dependencies": {
     "jquery": "~2.1.1",
     "underscore": "~1.6.0",
-    "versal-shared-modules": "git@github.com:Versal/shared-modules.git"
+    "versal-shared-modules": "~0.1.1"
   }
 }

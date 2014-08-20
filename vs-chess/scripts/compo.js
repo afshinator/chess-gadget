@@ -5,6 +5,7 @@
   var _doc = (document._currentScript || document.currentScript).ownerDocument;
   var _template = _doc.querySelector('template#vs-chess-template');
 
+  // add some getters
   var Proto = Object.create(HTMLElement.prototype, BaseCompMethods.propertiesObject);
 
   //life cycle events
@@ -37,6 +38,8 @@
       }
     },
 
+    // toggle listeners on 'mousemove'
+    // when authoring, save constantly upon 'mousemove'
     toggleMouse: function(flag){
       if(flag) {
         this.$el.on('mousemove', function(){
@@ -47,8 +50,11 @@
       }
     },
 
+    // always destory the current board
+    // always create a new board that is either editable or read-only
+    // based on the flag
     toggleBoard: function(flag){
-      //this.config is undefined in detachedCallback for Chrome36
+      //this.config is undefined in attachedCallback for Chrome36
       var position = (this.config && this.config.position) || 'start';
 
       var cfg = {
@@ -88,7 +94,7 @@
 
   });
 
-  //common methods and view methods
+  //add some common methods
   _.extend(Proto, BaseCompMethods);
 
   document.registerElement('vs-chess', {
