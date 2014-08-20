@@ -6,3 +6,9 @@ bower_components
 bundle.js
 bundle.min.js
 image-gadget
+eventEmitter
+jquery
+underscore
+versal-component-runtime
+versal-player-api
+versal-shared-modules
