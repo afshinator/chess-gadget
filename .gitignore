@@ -10,5 +10,5 @@ eventEmitter
 jquery
 underscore
 versal-component-runtime
-versal-player-api
+versal-gadget-api
 versal-shared-modules

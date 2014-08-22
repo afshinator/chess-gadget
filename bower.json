@@ -16,8 +16,7 @@
     "tests"
   ],
   "dependencies": {
-    "versal-component-runtime": "~0.2.2",
-    "versal-player-api": "~0.3.3",
+    "versal-gadget-api": "0.0.1",
     "versal-shared-modules": "~0.1.0",
     "jquery": "~2.1.1",
     "underscore": "~1.6.0"
