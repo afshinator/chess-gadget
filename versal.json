@@ -7,7 +7,10 @@
   "author": "Versal",
   "launcher": "iframe",
   "defaultConfig": {
-
+    "showNotation" : false,
+    "sparePieces" : true,
+    "flipped" : false,
+    "dropOffBoard" : false
   },
   "defaultUserState": {}
 }
