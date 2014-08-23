@@ -26,3 +26,90 @@ div {
   margin-left: 0;
   width: 320px;           /* 400 would be nice, but 320 lets us use the 'allow extra pieces' option */
 }
+
+#auxArea {
+  position: absolute;
+  top: 0px;
+  right: 0;
+  /* border: 1px dotted rgba(0, 0, 255, .1); */
+  width: 50%;
+  height: 100%;
+  font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 15px; 
+  padding-right: 10px;
+}
+
+.section{
+  /* border: 1px dotted rgba(255, 0, 0, .1);  */
+  color: rgb(82, 78, 71);
+}
+
+#section0 {
+  height:44px;
+  overflow: hidden;
+}
+
+#section1 {
+  min-height: 100px;
+  padding: 10px;
+}
+
+#section2 {
+  padding-top: 10px;
+  min-height: 200px;
+}
+
+#section2 p {
+  font-size: 12px;
+  margin: 0;
+}
+
+#exerciseTypeChoices {
+  display: none;
+}
+
+.pic {
+  display: inline-block;
+  height: 32px;
+  margin-right: 5px;
+}
+
+.pic img {
+  height: 38px;
+}
+
+.exercise {
+  display: none;
+}
+
+
+textarea:focus {
+    outline: none !important;
+    border: none;
+    box-shadow: 0 0 10px #f0d9b5;
+}
+
+#commentEntry {
+  display: none;
+  width: 97%;
+  height: 200px;
+  border: 1px dotted #f0d9b5;
+}
+
+#fenString {
+  font-size: 9px;
+}
+
+
+
+/* eye candy */
+
+.shadow1 {
+  box-shadow: 0 0 3px 0 rgba(108,106,95,0.6);
+  -webkit-box-shadow: 0 0 3px 0 rgba(108,106,95,0.6);
+  -moz-box-shadow: 0 0 3px 0 rgba(108,106,95,0.6);
+}
+
+.bordered {
+  border: 1px solid #c7c3be;
+}

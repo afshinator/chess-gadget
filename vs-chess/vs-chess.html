@@ -3,7 +3,29 @@
   <link rel="stylesheet" href="css/compo.css">
 
   <template id="vs-chess-template">
-    <div id="board1"></div>
+    <div id="board1"></div>   <!-- The chessboard -->
+
+    <div id="auxArea">        <!-- Auxillary controls & display area for exercises, ... -->
+      <div id="section0" class="section">
+        <div id="pic1" class="pic exercise exercise1"><img src="vs-chess/img/pic1.jpg"></div>
+        <div id="pic2" class="pic exercise exercise2"><img src="vs-chess/img/pic2.png"></div>
+        <div id="pic3" class="pic exercise exercise2"><img src="vs-chess/img/pic3.jpg"></div>
+        <div id="pic4" class="pic exercise exercise1 exercise2"><img src="vs-chess/img/pic4.png"></div>
+        <div id="pic5" class="pic exercise exercise1 exercise2"><img src="vs-chess/img/pic5.jpg"></div>
+        <div id="pic6" class="pic exercise exercise3"><img src="vs-chess/img/pic6.jpg"></div>
+        <div id="pic7" class="pic exercise exercise3"><img src="vs-chess/img/pic7.jpg"></div>  
+      </div>
+      <div id="section1" class="section">
+        <span id="exerciseTypeChoices"><legend>Choose exercise type to create:</legend>
+          <input type="radio" name="exType" value="Snapshot" />Snapshot<br/>
+          <input type="radio" name="exType" value="Sequence" />Sequence<br/>
+          <input type="radio" name="exType" value="Challenge" />Challenge<br/>
+        </span>
+      </div>
+      <div id="section2" class="section">
+        <textarea id="commentEntry" class="exercise exercise1 " name="textarea" placeholder="Add optional comment for this configuration"></textarea>
+      </div>
+    </div> 
   </template>
 
   <script type="text/javascript" src="../jquery/dist/jquery.js"></script>

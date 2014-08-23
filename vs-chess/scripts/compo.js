@@ -87,6 +87,7 @@
       this.board = new ChessBoard('board1', cfg);
     },
 
+
     setBoardPosition: function(position){
       if(this.board) {
         this.board.position(position);
@@ -95,7 +96,7 @@
 
 
     init: function() {
-      // TODO: initialize the UI component
+      this.ui.init( this );                               // initialize the UI component
       
       this.exerciseCreated = false;  
       this.recording = [];
@@ -105,13 +106,17 @@
         this.exerciseCreated = true;
         this.recording = this.config.recording;
         // TODO: now build the auxillary controls based on exerciseType
+        this.ui.buildDisplay();
       }
       else {                                              // No exercise info found in config;
-        // TODO: askAboutExerciseOptions() in UI Component to set exerciseType
+        this.ui.promptForExerciseType();            
 
       }
     },
 
+    test: function() {
+      console.log(' WAS ABLE TO DO IT!!!!!!!!!!!!!!!!!!');
+    },
 
     attributeChangedCallback: function(attrName, oldVal, newVal){
       function pieceMoved() {     // returns true if data-config event was a piece move (rather than prop sheet change)
@@ -148,6 +153,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
       switch (attrName) {
         case 'editable':                // Event indicates toggle between Author/Learner mode
           this.toggleBoard(this.editable);
+          this.ui.setMode( this.editable );
          //  this.toggleMouse(this.editable);
           break;
         case 'data-config':             // Event indicates prop-sheet changes OR chessboard move
@@ -163,10 +169,96 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
 
   });
 
-  // add auxillary UI controls
+
+  // TODO: add auxillary UI controls
   _.extend(Proto, {
       ui: function() {
-            console.log('TODO: automatically cache ui selections, present interface for rest ');
+        var el = {},            // will cache ui element selections
+
+        me = null;              // 'this' context of main object
+
+        init = function( thisPointer ) {
+          me = thisPointer;                      
+
+          el.$auxArea = $('#auxArea');
+          el.$sections = [];
+          for (var i=0; i < 3; i++) {                                       
+            el.$sections[i] = el.$auxArea.find( '#section' + i );
+          }
+          el.$commentEntry = el.$sections[2].find( '#commentEntry' );
+        },
+
+
+        promptForExerciseType = function() {
+          el.$auxArea.find( 'input:radio[name="exType"]' ).change( function() {
+            me.exerciseType = $(this).val();
+            me.save( { exerciseType: me.exerciseType } );   // TODO: maybe dont persist this yet, wait until exercise is completed
+            $(this).off();
+            el.$sections[1].find('#exerciseTypeChoices').remove();
+            buildDisplay();
+          });
+        },
+
+
+        makeButton : function( $el, fn ) {                  // Make a button out of ui element
+          $el.on('mouseover mouseout click', function(e) {
+            if ( e.type === 'mouseover' ) {
+              $(this).addClass('shadow1');
+            } 
+            else if ( e.type === 'mouseout' ) {
+              $(this).removeClass('shadow1');
+            }
+            else if ( e.type === 'click' ) {
+              fn();           // passed in handler
+            }
+          });
+        },
+
+
+        buildDisplay = function() {
+          switch ( me.exerciseType ) {
+            case 'Snapshot':
+              el.$sections[0].find( '.exercise1' ).css( 'display', 'inline-block' );  // show top row buttons
+              el.$commentEntry.css( 'display', 'block' );                             // show comment entry textarea
+
+              break;
+
+            case 'Sequence':
+
+              break;
+
+            default:
+              break;
+
+          }
+
+
+
+
+
+        },
+
+        authorOrLearnerToggle = function( isAuthorMode ) {
+          var $choices;
+
+          if ( me.exerciseType === undefined ) {
+            $choices = el.$sections[1].find( '#exerciseTypeChoices' );
+            if ( isAuthorMode ) {
+              $choices.css( 'display', 'inline' );
+            } else {
+              $choices.css( 'display', 'none' );
+            }
+          }
+
+        };
+
+        return {
+          el: el,
+          init: init,
+          promptForExerciseType: promptForExerciseType,
+          buildDisplay: buildDisplay,
+          setMode : authorOrLearnerToggle
+        };
       }()
   });
 
