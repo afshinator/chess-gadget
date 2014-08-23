@@ -7,7 +7,7 @@
   "author": "Versal",
   "launcher": "iframe",
   "defaultConfig": {
-    "memo": "Only authors can move"
+
   },
   "defaultUserState": {}
 }

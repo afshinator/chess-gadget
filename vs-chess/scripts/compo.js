@@ -50,15 +50,18 @@
       }
     },
 
-    // always destory the current board
-    // always create a new board that is either editable or read-only
-    // based on the flag
-    toggleBoard: function(flag){
-      //this.config is undefined in attachedCallback for Chrome36
-      var position = (this.config && this.config.position) || 'start';
 
-      var cfg = {
+    toggleBoard: function(flag){
+      var cfg, 
+          position = (this.config && this.config.position) || 'start';    //this.config is undefined in detachedCallback for Chrome36
+
+      cfg = {
         draggable: flag,
+        showNotation: (this.config && this.config.showNotation !== undefined ) ? this.config.showNotation : false,
+        // setting a default for sparePieces in versal.json breaks draggable: false !!
+        sparePieces : (this.config && this.config.sparePieces !== undefined ) ? this.config.sparePieces : false,  
+        orientation: (this.config  && (this.config.flipped === true) )  ? 'black' : 'white',
+        dropOffBoard: (this.config && this.config.dropOffBoard === true ) ? 'trash' : 'snapback', 
         moveSpeed: 'slow',
         snapbackSpeed: 500,
         snapSpeed: 100,
@@ -79,12 +82,35 @@
     },
 
     attributeChangedCallback: function(attrName, oldVal, newVal){
+      function pieceMoved() {     // returns true if data-config event was a piece move (rather than prop sheet change)
+        var oldV, newV;
+
+        if ( oldVal === null && newVal === null ) {   // oldVal, newVal are null until a move is generated
+          return false; 
+        }
+        else if ( oldVal === null && newVal.position === undefined ) { // A prop-sheet peek can cause this situation
+          return false;
+        } else {
+          oldV = JSON.parse(oldVal);  newV = JSON.parse(newVal);
+          if ( oldV.position === undefined && oldV.position === undefined ) return false;  
+          return !_.isEqual( oldV.position, newV.position );
+        }
+      }
+
+console.log('<-- attrName ' + attrName);
+console.log('----- this.editable:' + this.editable );
+// console.log('--old ' + oldVal );  
+// console.log('--new ' + newVal );
+console.log('-- pieceMoved ' + pieceMoved() );
+console.log('----> this.config:' + JSON.stringify(this.config) );
+
+
       switch (attrName) {
-        case 'editable':
+        case 'editable':          // Event indicates toggle between Author/Learner mode
           this.toggleBoard(this.editable);
           this.toggleMouse(this.editable);
           break;
-        case 'data-config':
+        case 'data-config':       // Event indicates prop-sheet changes OR chessboard move
           this.setBoardPosition(this.config.position);
           break;
         default:

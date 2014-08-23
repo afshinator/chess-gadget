@@ -23,6 +23,6 @@ div {
 
 /* boards */
 #board1 {
-  margin-left: auto;
-  margin-right: auto;
+  margin-left: 0;
+  width: 320px;           /* 400 would be nice, but 320 lets us use the 'allow extra pieces' option */
 }

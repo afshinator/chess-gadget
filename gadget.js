@@ -31,9 +31,21 @@
     this.vi.setHeight(400);
 
     this.vi.setPropertySheetAttributes({
-      memo: {
-        title: 'Memo',
-        type: 'Text'
+      showNotation: {
+        title: 'Show board coordinates',
+        type: 'Checkbox'
+      },
+      sparePieces: {
+        title: 'Show & allow spares',
+        type: 'Checkbox',
+      },
+      flipped: {
+        title: 'Flip black/white orientation',
+        type: 'Checkbox'
+      },
+      dropOffBoard: {
+        title: 'Drag piece off board to remove',
+        type: 'Checkbox'
       }
     });
   };
