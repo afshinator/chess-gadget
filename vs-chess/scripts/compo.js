@@ -115,9 +115,6 @@
       }
     },
 
-    test: function() {
-      console.log(' WAS ABLE TO DO IT!!!!!!!!!!!!!!!!!!');
-    },
 
     attributeChangedCallback: function(attrName, oldVal, newVal){
       function pieceMoved() {     // returns true if data-config event was a piece move (rather than prop sheet change)
@@ -177,7 +174,8 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         var el = {},            // will cache ui element selections
           memo = {
             recordingStarted : false,
-            recordingFinished: false
+            recordingFinished: false,
+            isDeleting : false
           },
           me = null;            // 'this' context of main object
 
@@ -238,11 +236,32 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             memo.recordingStarted = true;
 
             me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val(), delta: 'start' } );  // save current position as starting position
+            el.$sections[0].find( '#pic4' ).off().css( 'display', 'none' );   // hide reset button
+            el.$sections[0].find( '#pic5' ).off().css( 'display', 'none' );   // hide clear button
             el.$commentEntry.val('');            // empty out to enable next comment            
             el.$sections[1].empty().append( '<p id="movements"><span id="lastRecorded">0.<em>start</em></span></p>');
 
+            // Setup handler for erase button
+            makeButton( el.$sections[0].find( '#pic3' ), function() {
+              var $section = el.$sections[1],
+                html;
+
+              if ( memo.recordingStarted && !memo.recordingFinished && me.recording.length > 1 ) {
+                memo.isDeleting = true;
+                me.recording.pop();
+                me.board.position( me.recording[ me.recording.length - 1 ].pos );
+                $section.find('.move').last().empty(); 
+                // html = $section.find('#movements').html();
+
+                // $section.empty().append( ) ;
+                me.save( { recording: me.recording } );
+              }
+            });
+
+            // Setup handler for next click to stop the recording
             button.one('click', function() {     // next click stops the recording
               button.removeClass('animate1');
+              el.$sections[0].find( '#pic3' ).off().fadeOut();
               me.save( { exerciseType: me.exerciseType, recording: me.recording } );
               me.exerciseCreated = true;
               memo.recordingFinished = true;
@@ -268,6 +287,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
               el.$sections[0].find( '.exercise2' ).css( 'display', 'inline-block' );
               el.$sections[1].addClass( 'bordered' );
               el.$commentEntry.css( 'display', 'block' );
+              el.$commentEntry.attr("placeholder", "Add optional comment for this scene.");
 
               makeButton( el.$sections[0].find('#pic2'), recordSequence );
               // makeButton( el.$sections[0].find('#pic3'),  );              
@@ -331,30 +351,27 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
 
         },
 
-        moveEvent = function( oldPos, newPos ) {
+
+        objectDelta = function ( a, b ) {
+          var result = {};
+          for (var i in b) {
+            if ( a[i] !== b[i] ) {
+              result[i] = b[i];
+            }
+          }
+          return JSON.stringify(result).replace(/[^\w\s]/gi, '');
+        },
+
+
+        generateDeltaList = function( oldPos, newPos ) {
           var i, 
             moves = '<p id="movements"><span id="move0">0.<em>start</em></span>',
-            moveDetail,
+            moveDetail;
 
-            objDelta = function( a, b ) {
-              var result = {};
-              for (var i in b) {
-                if ( a[i] !== b[i] ) {
-                  result[i] = b[i];
-                }
-              }
-              return result;
-            };
+            moveDetail = objectDelta( oldPos, newPos );
 
-          if ( memo.recordingStarted && !memo.recordingFinished ) {
-            // console.log('___ old: ' + JSON.stringify(oldPos) );
-            // console.log('___ new: ' + JSON.stringify(newPos) );
-            moveDetail = JSON.stringify( objDelta( oldPos, newPos ) );
-console.log( "DELTA: " + moveDetail );
-            me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val(), delta : moveDetail } );
-            el.$commentEntry.val('');            // empty out to enable next comment            
             for ( i = 1; i < me.recording.length; i++ ) {
-              moves += ( '   <span class="move' + i + ' ' );
+              moves += ( '   <span class="move move' + i + ' ' );
               if ( i === me.recording.length - 1 ) {
                 moves += ( 'highlight1">    ' + i + '.' + moveDetail );
               } else {
@@ -363,7 +380,22 @@ console.log( "DELTA: " + moveDetail );
               moves += '</span>';
             }
             moves += '</p>';
-            el.$sections[1].empty().append( moves );
+
+            return moves;
+        },
+
+        moveEvent = function( oldPos, newPos ) {
+          if ( memo.recordingStarted && !memo.recordingFinished && !memo.isDeleting) {
+            // console.log('___ old: ' + JSON.stringify(oldPos) );
+            // console.log('___ new: ' + JSON.stringify(newPos) );
+console.log( "============= move event: "  );
+            me.recording.push({ pos: me.newPos,                               // Record the movement for the sequence
+                                comment: el.$commentEntry.val(), 
+                                delta : objectDelta( oldPos, newPos )
+                              });
+            el.$commentEntry.val('');            // empty out to enable next comment            
+
+            el.$sections[1].empty().append( generateDeltaList( oldPos, newPos ) );
           }
         };
 
