@@ -58,6 +58,7 @@
       var onChange = function(oldPos, newPos) {
         this.oldPos = ChessBoard.objToFen(oldPos);
         this.newPos = ChessBoard.objToFen(newPos);
+        this.ui.moveEvent(oldPos, newPos);
         console.log("*** onChange():  editable:" + this.editable + "  Old position: " + this.oldPos +  "  New position: " + this.newPos  );
         // this.save();
       };
@@ -174,8 +175,11 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
   _.extend(Proto, {
       ui: function() {
         var el = {},            // will cache ui element selections
-
-        me = null;              // 'this' context of main object
+          memo = {
+            recordingStarted : false,
+            recordingFinished: false
+          },
+          me = null;            // 'this' context of main object
 
         init = function( thisPointer ) {
           me = thisPointer;                      
@@ -209,12 +213,13 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
               $(this).removeClass('shadow1');
             }
             else if ( e.type === 'click' ) {
-              fn();           // passed in handler
+              fn( $(this) );           // invoke passed in handler, and pass it jquery ref to button
             }
           });
         },
 
 
+        // callback for snapshot button, excercise 1
         takeASnapshot = function() {    // callback for pressing the camera button in Snapshot exercise
           me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val() } );
           me.save( { exerciseType: me.exerciseType, recording: me.recording } );
@@ -227,7 +232,27 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         },
 
 
-        buildDisplay = function() {
+        recordSequence = function(button) {
+          if ( ! memo.recordingStarted ) {
+            button.off().addClass('animate1');   // turn off catching these events, add class to indicate recording started
+            memo.recordingStarted = true;
+
+            me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val(), delta: 'start' } );  // save current position as starting position
+            el.$commentEntry.val('');            // empty out to enable next comment            
+            el.$sections[1].empty().append( '<p id="movements"><span id="lastRecorded">0.<em>start</em></span></p>');
+
+            button.one('click', function() {     // next click stops the recording
+              button.removeClass('animate1');
+              me.save( { exerciseType: me.exerciseType, recording: me.recording } );
+              me.exerciseCreated = true;
+              memo.recordingFinished = true;
+            });
+          }
+
+        },
+
+
+        buildDisplay = function() {             // TODO: make dry
           switch ( me.exerciseType ) {
             case 'Snapshot':
               el.$sections[0].find( '.exercise1' ).css( 'display', 'inline-block' );  // show top row buttons
@@ -235,12 +260,19 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
               el.$commentEntry.css( 'display', 'block' );                             // show comment entry textarea
 
               makeButton( el.$sections[0].find('#pic1'), takeASnapshot );
-              makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } );
-              makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } );
+              makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } ); // reset all the board pieces
+              makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } ); // clear the board entirely
               break;
 
             case 'Sequence':
+              el.$sections[0].find( '.exercise2' ).css( 'display', 'inline-block' );
+              el.$sections[1].addClass( 'bordered' );
+              el.$commentEntry.css( 'display', 'block' );
 
+              makeButton( el.$sections[0].find('#pic2'), recordSequence );
+              // makeButton( el.$sections[0].find('#pic3'),  );              
+              makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } ); // reset all the board pieces
+              makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } ); // clear the board entirely
               break;
 
             default:
@@ -281,10 +313,15 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             el.$sections[0].css( 'visibility', 'hidden' );
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
-                el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"><p></div>');
+                el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
                 makeButton( el.$sections[2].find('#showSnap'), function() {
                   me.board.position( me.recording[0].pos );
                 });
+              }
+              if ( me.exerciseType === 'Sequence' ) {
+                el.$sections[2].empty(); 
+                el.$sections[2].append('<div class="center"><img id="goLeft" src="vs-chess/img/left.jpg" height="70px" width="70px"><img id="goRight" src="vs-chess/img/right.jpg" height="70px" width="70px"></div>');
+                // TODO: handlers for left/right buttons
               }
             }
             else { //  exercise not yet created
@@ -292,6 +329,42 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             }
           }
 
+        },
+
+        moveEvent = function( oldPos, newPos ) {
+          var i, 
+            moves = '<p id="movements"><span id="move0">0.<em>start</em></span>',
+            moveDetail,
+
+            objDelta = function( a, b ) {
+              var result = {};
+              for (var i in b) {
+                if ( a[i] !== b[i] ) {
+                  result[i] = b[i];
+                }
+              }
+              return result;
+            };
+
+          if ( memo.recordingStarted && !memo.recordingFinished ) {
+            // console.log('___ old: ' + JSON.stringify(oldPos) );
+            // console.log('___ new: ' + JSON.stringify(newPos) );
+            moveDetail = JSON.stringify( objDelta( oldPos, newPos ) );
+console.log( "DELTA: " + moveDetail );
+            me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val(), delta : moveDetail } );
+            el.$commentEntry.val('');            // empty out to enable next comment            
+            for ( i = 1; i < me.recording.length; i++ ) {
+              moves += ( '   <span class="move' + i + ' ' );
+              if ( i === me.recording.length - 1 ) {
+                moves += ( 'highlight1">    ' + i + '.' + moveDetail );
+              } else {
+                moves += ( '">    ' + i + '.' + me.recording[i].delta );
+              }
+              moves += '</span>';
+            }
+            moves += '</p>';
+            el.$sections[1].empty().append( moves );
+          }
         };
 
         return {
@@ -299,6 +372,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
           init: init,
           promptForExerciseType: promptForExerciseType,
           buildDisplay: buildDisplay,
+          moveEvent: moveEvent,
           setMode : authorLearnerToggle
         };
       }()
