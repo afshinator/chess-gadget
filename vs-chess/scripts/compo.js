@@ -58,8 +58,8 @@
       var onChange = function(oldPos, newPos) {
         this.oldPos = ChessBoard.objToFen(oldPos);
         this.newPos = ChessBoard.objToFen(newPos);
-        console.log("**onChange()   editable:" + this.editable + "   Old position: " + this.oldPos +  "      New position: " + this.newPos  );
-        this.save();
+        console.log("*** onChange():  editable:" + this.editable + "  Old position: " + this.oldPos +  "  New position: " + this.newPos  );
+        // this.save();
       };
 
       var cfg, 
@@ -192,7 +192,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         promptForExerciseType = function() {
           el.$auxArea.find( 'input:radio[name="exType"]' ).change( function() {
             me.exerciseType = $(this).val();
-            me.save( { exerciseType: me.exerciseType } );   // TODO: maybe dont persist this yet, wait until exercise is completed
+            // me.save( { exerciseType: me.exerciseType } );   // TODO: maybe dont persist this yet, wait until exercise is completed
             $(this).off();
             el.$sections[1].find('#exerciseTypeChoices').remove();
             buildDisplay();
@@ -200,7 +200,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         },
 
 
-        makeButton : function( $el, fn ) {                  // Make a button out of ui element
+        makeButton = function( $el, fn ) {                  // Make a button out of ui element
           $el.on('mouseover mouseout click', function(e) {
             if ( e.type === 'mouseover' ) {
               $(this).addClass('shadow1');
@@ -215,12 +215,28 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         },
 
 
+        takeASnapshot = function() {    // callback for pressing the camera button in Snapshot exercise
+          me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val() } );
+          me.save( { exerciseType: me.exerciseType, recording: me.recording } );
+          me.exerciseCreated = true;
+
+          el.$sections[0].find( '.exercise1' ).off().css( 'display', 'none' );
+          el.$commentEntry.css( 'display', 'none' );
+          el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.newPos + '</p>' );
+          el.$sections[2].append('<div><p><strong>Snapshot done.</strong></p><p>' + me.recording[0].comment + '</p></div>');
+        },
+
+
         buildDisplay = function() {
           switch ( me.exerciseType ) {
             case 'Snapshot':
               el.$sections[0].find( '.exercise1' ).css( 'display', 'inline-block' );  // show top row buttons
+              el.$sections[1].addClass( 'bordered' );
               el.$commentEntry.css( 'display', 'block' );                             // show comment entry textarea
 
+              makeButton( el.$sections[0].find('#pic1'), takeASnapshot );
+              makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } );
+              makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } );
               break;
 
             case 'Sequence':
@@ -232,21 +248,47 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
 
           }
 
-
-
-
-
         },
 
-        authorOrLearnerToggle = function( isAuthorMode ) {
-          var $choices;
 
+        authorLearnerToggle = function( isAuthorMode ) {
+          var $tmp;
+
+          // Case where no prerecorded exercise and author has yet to choose which one
           if ( me.exerciseType === undefined ) {
-            $choices = el.$sections[1].find( '#exerciseTypeChoices' );
+            $tmp = el.$sections[1].find( '#exerciseTypeChoices' );
             if ( isAuthorMode ) {
-              $choices.css( 'display', 'inline' );
+              $tmp.css( 'display', 'inline' );
             } else {
-              $choices.css( 'display', 'none' );
+              $tmp.css( 'display', 'none' );
+            }
+            return;   
+          }
+          
+
+          if ( isAuthorMode ) {     // --> Author mode
+            if ( me.exerciseCreated ) {
+              if ( me.exerciseType === 'Snapshot' ) {
+                // el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"><p></div>');
+              }
+            }
+            else {  //  exercise not yet created
+              el.$sections[0].css( 'visibility', 'visible' );
+              el.$sections[2].css( 'visibility', 'visible' );
+            }
+          }
+          else {                    // --> Learner mode
+            el.$sections[0].css( 'visibility', 'hidden' );
+            if ( me.exerciseCreated ) {
+              if ( me.exerciseType === 'Snapshot' ) {
+                el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"><p></div>');
+                makeButton( el.$sections[2].find('#showSnap'), function() {
+                  me.board.position( me.recording[0].pos );
+                });
+              }
+            }
+            else { //  exercise not yet created
+              el.$sections[2].css( 'visibility', 'hidden' );
             }
           }
 
@@ -257,7 +299,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
           init: init,
           promptForExerciseType: promptForExerciseType,
           buildDisplay: buildDisplay,
-          setMode : authorOrLearnerToggle
+          setMode : authorLearnerToggle
         };
       }()
   });
