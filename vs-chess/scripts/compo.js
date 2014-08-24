@@ -336,6 +336,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
                 el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
                 makeButton( el.$sections[2].find('#showSnap'), function() {
                   me.board.position( me.recording[0].pos );
+                  el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.recording[0].pos + '</p>' );
                 });
               }
               if ( me.exerciseType === 'Sequence' ) {
@@ -385,6 +386,13 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         },
 
         moveEvent = function( oldPos, newPos ) {
+
+          // For snapshots, after its been recorded
+          if ( me.exerciseType === 'Snapshot' ) {
+            el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.newPos + '</p>' );
+          }
+
+          // For sequence, during the recording phase
           if ( memo.recordingStarted && !memo.recordingFinished && !memo.isDeleting) {
             // console.log('___ old: ' + JSON.stringify(oldPos) );
             // console.log('___ new: ' + JSON.stringify(newPos) );
