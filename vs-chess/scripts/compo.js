@@ -331,7 +331,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             el.$sections[0].css( 'visibility', 'hidden' );
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
-                el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
+                el.$sections[2].empty().append('<p class="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
                 makeButton( el.$sections[2].find('#showSnap'), function() {
                   me.board.position( me.recording[0].pos );
                   el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.recording[0].pos + '</p>' );
@@ -342,16 +342,20 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
                 el.$sections[2].append('<div class="center"> \
                   <img id="goLeft" src="vs-chess/img/left.jpg" height="70px" width="70px"> \
                   <img id="goRight" src="vs-chess/img/right.jpg" height="70px" width="70px"> \
-                  <p>Click on a move above to jump to that position</p> \
-                  </div>');
+                  </div><p class="comment">Click on a move above to jump to that position.</p>');
+
                 // TODO: handlers for left/right buttons
                 el.$sections[2].find('img').addClass('faded1');     // TODO: for now, show that its disabled
                 el.$sections[1].find('.move').
                   addClass('cursor1').
                   on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
+                    var frame = $(e.target).text().trim();          // get text from the html for frame #
+                    el.$sections[2].find('.comment').remove();      // 
                     el.$sections[1].find('.move').removeClass('highlight1');
                     $(e.target).addClass('highlight1');
-              console.log( $(e.target).text() );
+                    frame = frame.slice(0, frame.indexOf('.'));     // extract frame #
+                    me.board.position( me.recording[frame].pos );
+                    el.$sections[2].append( '<span class="comment">' + me.recording[frame].comment + '</span>' );
                   });
               }
             }
