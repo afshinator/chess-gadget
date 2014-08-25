@@ -40,7 +40,7 @@
       }
     },
 
-    // toggle listeners on 'mousemove'
+    // toggle listeners on 'mousemove' -- not used anymore
     // when authoring, save constantly upon 'mousemove'
     toggleMouse: function(flag){
       if(flag) {
@@ -60,7 +60,6 @@
         this.newPos = ChessBoard.objToFen(newPos);
         this.ui.moveEvent(oldPos, newPos);
         console.log("*** onChange():  editable:" + this.editable + "  Old position: " + this.oldPos +  "  New position: " + this.newPos  );
-        // this.save();
       };
 
       var cfg, 
@@ -110,8 +109,7 @@
         this.ui.buildDisplay();
       }
       else {                                              // No exercise info found in config;
-        this.ui.promptForExerciseType();            
-
+        this.ui.promptForExerciseType();
       }
     },
 
@@ -168,7 +166,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
   });
 
 
-  // TODO: add auxillary UI controls
+  // Auxillary UI controls for the chessboard - to create Snapshots, Sequence recording, or a Challenge
   _.extend(Proto, {
       ui: function() {
         var el = {},            // will cache ui element selections
@@ -234,14 +232,17 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
           if ( ! memo.recordingStarted ) {
             button.off().addClass('animate1');   // turn off catching these events, add class to indicate recording started
             memo.recordingStarted = true;
-
-            me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val(), delta: 'start' } );  // save current position as starting position
+            me.recording.push({                  // save current position as starting position
+                pos: me.newPos || me.board.fen(), 
+                comment: el.$commentEntry.val(), 
+                delta: 'start' 
+            });  
             el.$sections[0].find( '#pic4' ).off().css( 'display', 'none' );   // hide reset button
             el.$sections[0].find( '#pic5' ).off().css( 'display', 'none' );   // hide clear button
             el.$commentEntry.val('');            // empty out to enable next comment            
             el.$sections[1].empty().append( '<p id="movements"><span id="lastRecorded">0.<em>start</em></span></p>');
 
-            // Setup handler for erase button
+            // Handler for erase button
             makeButton( el.$sections[0].find( '#pic3' ), function() {
               var $section = el.$sections[1],
                 html;
@@ -250,27 +251,26 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
                 memo.isDeleting = true;
                 me.recording.pop();
                 me.board.position( me.recording[ me.recording.length - 1 ].pos );
-                $section.find('.move').last().empty(); 
-                // html = $section.find('#movements').html();
+                $section.find('.move').last().remove();
+                $section.find('.move').last().addClass( 'highlight1' );
 
-                // $section.empty().append( ) ;
                 me.save( { recording: me.recording } );
               }
             });
 
-            // Setup handler for next click to stop the recording
+            // Handler for next click to stop the recording
             button.one('click', function() {     // next click stops the recording
               button.removeClass('animate1');
-              el.$sections[0].find( '#pic3' ).off().fadeOut();
+              el.$sections[0].find( '#pic3' ).off().fadeOut();      // turn off erase button
               me.save( { exerciseType: me.exerciseType, recording: me.recording } );
               me.exerciseCreated = true;
               memo.recordingFinished = true;
             });
           }
-
         },
 
 
+        // At startup time, display ui components based on which exercise type was chosen
         buildDisplay = function() {             // TODO: make dry
           switch ( me.exerciseType ) {
             case 'Snapshot':
@@ -290,14 +290,12 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
               el.$commentEntry.attr("placeholder", "Add optional comment for this scene.");
 
               makeButton( el.$sections[0].find('#pic2'), recordSequence );
-              // makeButton( el.$sections[0].find('#pic3'),  );              
               makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } ); // reset all the board pieces
               makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } ); // clear the board entirely
               break;
 
             default:
               break;
-
           }
 
         },
@@ -318,7 +316,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
           }
           
 
-          if ( isAuthorMode ) {     // --> Author mode
+          if ( isAuthorMode ) {           // --> Author mode
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
                 // el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"><p></div>');
@@ -329,7 +327,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
               el.$sections[2].css( 'visibility', 'visible' );
             }
           }
-          else {                    // --> Learner mode
+          else {                          // --> Learner mode
             el.$sections[0].css( 'visibility', 'hidden' );
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
@@ -341,8 +339,20 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
               }
               if ( me.exerciseType === 'Sequence' ) {
                 el.$sections[2].empty(); 
-                el.$sections[2].append('<div class="center"><img id="goLeft" src="vs-chess/img/left.jpg" height="70px" width="70px"><img id="goRight" src="vs-chess/img/right.jpg" height="70px" width="70px"></div>');
+                el.$sections[2].append('<div class="center"> \
+                  <img id="goLeft" src="vs-chess/img/left.jpg" height="70px" width="70px"> \
+                  <img id="goRight" src="vs-chess/img/right.jpg" height="70px" width="70px"> \
+                  <p>Click on a move above to jump to that position</p> \
+                  </div>');
                 // TODO: handlers for left/right buttons
+                el.$sections[2].find('img').addClass('faded1');     // TODO: for now, show that its disabled
+                el.$sections[1].find('.move').
+                  addClass('cursor1').
+                  on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
+                    el.$sections[1].find('.move').removeClass('highlight1');
+                    $(e.target).addClass('highlight1');
+              console.log( $(e.target).text() );
+                  });
               }
             }
             else { //  exercise not yet created
@@ -353,26 +363,28 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         },
 
 
-        objectDelta = function ( a, b ) {
+        // simple object compare, return key/val in b thats not in a
+        objectDelta = function ( a, b ) {     
           var result = {};
           for (var i in b) {
             if ( a[i] !== b[i] ) {
               result[i] = b[i];
             }
           }
-          return JSON.stringify(result).replace(/[^\w\s]/gi, '');
+          return JSON.stringify(result).replace(/[^\w\s]/gi, '');   // turn into a string, take out non-alphanum characters
         },
 
 
+        // put together html string containing the delta's (changes) between each recorded move
         generateDeltaList = function( oldPos, newPos ) {
           var i, 
-            moves = '<p id="movements"><span id="move0">0.<em>start</em></span>',
+            moves = '<p id="movements"><span id="move0" class="move">0.start</span>',
             moveDetail;
 
             moveDetail = objectDelta( oldPos, newPos );
 
             for ( i = 1; i < me.recording.length; i++ ) {
-              moves += ( '   <span class="move move' + i + ' ' );
+              moves += ( '   <span id="move' + i + '" class="move ' );
               if ( i === me.recording.length - 1 ) {
                 moves += ( 'highlight1">    ' + i + '.' + moveDetail );
               } else {
@@ -385,18 +397,16 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             return moves;
         },
 
-        moveEvent = function( oldPos, newPos ) {
 
-          // For snapshots, after its been recorded
+        // Called upon every movement of a piece on the board
+        moveEvent = function( oldPos, newPos ) {
+          // For snapshots,
           if ( me.exerciseType === 'Snapshot' ) {
             el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.newPos + '</p>' );
           }
 
           // For sequence, during the recording phase
           if ( memo.recordingStarted && !memo.recordingFinished && !memo.isDeleting) {
-            // console.log('___ old: ' + JSON.stringify(oldPos) );
-            // console.log('___ new: ' + JSON.stringify(newPos) );
-console.log( "============= move event: "  );
             me.recording.push({ pos: me.newPos,                               // Record the movement for the sequence
                                 comment: el.$commentEntry.val(), 
                                 delta : objectDelta( oldPos, newPos )
@@ -405,7 +415,10 @@ console.log( "============= move event: "  );
 
             el.$sections[1].empty().append( generateDeltaList( oldPos, newPos ) );
           }
+
+          if ( memo.isDeleting ) memo.isDeleting = false;
         };
+
 
         return {
           el: el,
