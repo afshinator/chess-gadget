@@ -146,13 +146,15 @@ div {
 
 /* Section 4  -  the Reset Gadget button 
 */
-    #section4 {           /* */
+    #section4 {           
+      display: none;
       position: absolute;
       z-index:2;
       bottom: 2px;
       right: 2px;
       width: 16px;
       height: 16px;
+      opacity: 0.7;
       /* background: red; */
     }
 
@@ -167,7 +169,7 @@ div {
       left: 20%;
       height: 40%;
       width: 40%;
-      background: red;
+      /* background: red; */
       opacity: .9;
       padding: 10px;
       font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -177,6 +179,11 @@ div {
       margin: 0;
     }
 
+    #dismiss {
+      position: absolute;
+      bottom:4px;
+      right:4px;
+    }
 
 /* eye candy */
 
@@ -217,6 +224,20 @@ div {
 .faded1 {
   opacity: 0.05;
 }
+
+
+.gradient1 {
+background: #fcfff4; /* Old browsers */
+background: -moz-linear-gradient(-45deg,  #fcfff4 0%, #dfe5d7 40%, #b3bead 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#fcfff4), color-stop(40%,#dfe5d7), color-stop(100%,#b3bead)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(-45deg,  #fcfff4 0%,#dfe5d7 40%,#b3bead 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(-45deg,  #fcfff4 0%,#dfe5d7 40%,#b3bead 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(-45deg,  #fcfff4 0%,#dfe5d7 40%,#b3bead 100%); /* IE10+ */
+background: linear-gradient(135deg,  #fcfff4 0%,#dfe5d7 40%,#b3bead 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfff4', endColorstr='#b3bead',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
+}
+
 
 .animate1 {
     -webkit-animation-name: spin;
