@@ -186,9 +186,18 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
           for (var i=0; i < 4; i++) {                                       
             el.$sections[i] = el.$auxArea.find( '#section' + i );
           }
+          el.$status = $('#statusMsg').hide();
           el.$commentEntry = el.$sections[2].find( '#commentEntry' );
         },
 
+        statusMessage = function(str, bCenter) {
+          el.$status.find('.msg').remove();
+          el.$status.css('display', 'block')
+            .append( '<h2 class="msg">' + str + '</h2>' )
+            .one( 'click', function() {
+              $(this).fadeOut('1000');
+            });
+        },
 
         promptForExerciseType = function() {
           el.$auxArea.find( 'input:radio[name="exType"]' ).change( function() {
@@ -218,14 +227,23 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
 
         // Callback for Snapshot button, excercise 1
         takeASnapshot = function() {    // callback for pressing the camera button in Snapshot exercise
+          if ( me.exerciseCreated ) { // in case of a prevouisly recorded snapshot
+            me.recording.pop();
+          }
           me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val().trim() } );
           me.save( { exerciseType: me.exerciseType, recording: me.recording } );
           me.exerciseCreated = true;
 
-          el.$sections[0].find( '.exercise1' ).off().css( 'display', 'none' );
-          el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.newPos + '</p>' );
-          el.$sections[2].css('display', 'none');
-          el.$sections[3].append('<p><strong>Snapshot done.</strong></p><p>' + me.recording[0].comment + '</p>');
+          el.$commentEntry.val('').attr("placeholder", "");
+          statusMessage( 'Snapshot done.  Click camera again to capture new snap.', true );
+          el.$sections[3].append('<p class="comment">' + me.recording[0].comment + '</p>');
+          el.$sections[0].find( '#pic1' )
+            .hide()
+            .fadeIn('250', function() {
+              el.$sections[1]
+                .empty()
+                .append( '<h4>FEN Notation:</h4><p class="highlight1">' + me.newPos + '</p>' );
+            });
         },
 
 
@@ -264,7 +282,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             button.one('click', function() {     // next click stops the recording
               button.removeClass('animate1');
               el.$sections[0].find( '#pic3' ).off().fadeOut();      // turn off erase button
-              el.$sections[2].css('display', 'none');
+              statusMessage("Recording sequence done.", true );
               me.save( { exerciseType: me.exerciseType, recording: me.recording } );
               me.exerciseCreated = true;
               memo.recordingFinished = true;
@@ -274,27 +292,26 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
 
 
         // At startup time, display ui components based on which exercise type was chosen
-        buildDisplay = function() {             // TODO: make dry
-          switch ( me.exerciseType ) {
-            case 'Snapshot':
-              el.$sections[0].find( '.exercise1' ).css( 'display', 'inline-block' );  // show top row buttons
-              el.$sections[1].addClass( 'bordered' );
-              el.$commentEntry.css( 'display', 'block' );                             // show comment entry textarea
+        buildDisplay = function() {
+          var cache;
 
+          el.$sections[1].addClass( 'bordered' );
+          el.$commentEntry.css( 'display', 'block' );            // show comment entry textarea
+
+          makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } ); // reset all the board pieces
+          makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } ); // clear the board entirely
+
+          switch ( me.exerciseType ) {
+
+            case 'Snapshot':
+              el.$sections[0].find( '.exercise1' ).css( 'display', 'inline-block' );  // show top row buttons for this exercise          
               makeButton( el.$sections[0].find('#pic1'), takeASnapshot );
-              makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } ); // reset all the board pieces
-              makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } ); // clear the board entirely
               break;
 
             case 'Sequence':
               el.$sections[0].find( '.exercise2' ).css( 'display', 'inline-block' );
-              el.$sections[1].addClass( 'bordered' );
-              el.$commentEntry.css( 'display', 'block' );
               el.$commentEntry.attr("placeholder", "Add optional comment for this scene.");
-
               makeButton( el.$sections[0].find('#pic2'), recordSequence );
-              makeButton( el.$sections[0].find('#pic4'), function(){ me.board.start(true); } ); // reset all the board pieces
-              makeButton( el.$sections[0].find('#pic5'), function(){ me.board.clear(true); } ); // clear the board entirely
               break;
 
             default:
@@ -320,52 +337,54 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
           
 
           if ( isAuthorMode ) {           // --> Author mode
-            el.$sections[0].css( 'visibility', 'visible' );
+            el.$sections[0].find('.author-only').css( 'visibility', 'visible' );
+            el.$sections[2].css( 'display', 'block' );
 
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
+                el.$sections[3].find('#showSnap').off().remove();
               }
             }
             else {  //  exercise not yet created
               el.$sections[2].css( 'display', 'block' );
-              // el.$sections[3].css( 'visibility', 'visible' );
             }
           }
           else {                          // --> Learner mode
-            el.$sections[0].css( 'visibility', 'hidden' );
-            
+            el.$sections[0].find('.author-only').css( 'visibility', 'hidden' );
+            el.$sections[2].css( 'display', 'none' );
+
             if ( me.exerciseCreated ) {
-              if ( me.exerciseType === 'Snapshot' ) {
+              if ( me.exerciseType === 'Snapshot' ) {             // Snapshot ------------------
                 el.$sections[3].empty().append('<p class="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
                 makeButton( el.$sections[3].find('#showSnap'), function() {
                   me.board.position( me.recording[0].pos );
-                  el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.recording[0].pos + '</p>' );
+                  el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p class="highlight1">' + me.recording[0].pos + '</p>' );
                 });
               }
-              if ( me.exerciseType === 'Sequence' ) {
+              if ( me.exerciseType === 'Sequence' ) {             // Sequence ------------------
                 el.$sections[3].empty(); 
-                el.$sections[3].append('<div class="center"> \
-                  <img id="goLeft" src="vs-chess/img/left.jpg" height="70px" width="70px"> \
-                  <img id="goRight" src="vs-chess/img/right.jpg" height="70px" width="70px"> \
-                  </div><p class="comment">Click on a move above to jump to that position.</p>');
+                // el.$sections[3].append('<div class="center"> \
+                //   <img id="goLeft" src="vs-chess/img/left.jpg" height="70px" width="70px"> \
+                //   <img id="goRight" src="vs-chess/img/right.jpg" height="70px" width="70px"> \
+                //   </div><p class="comment">Click on a move above to jump to that position.</p>');
 
+                //statusMessage("Recording sequence done. Click on a move above to jump to that position.", bCenter, )
                 // TODO: handlers for left/right buttons
-                el.$sections[3].find('img').addClass('faded1');     // TODO: for now, show that its disabled
+                // el.$sections[3].find('img').addClass('faded1');     // TODO: for now, show that its disabled
 
                 el.$sections[1].find('.move').addClass('cursor1').
                   on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
                     var frame = $(e.target).text().trim();          // get text from the html for frame #
                     el.$sections[3].find('.comment').remove();      // 
-                    el.$sections[1].find('.move').removeClass('highlight1').css('font-weight', 'normal');
-                    $(e.target).addClass('highlight1').css('font-weight', 'bold');
+                    el.$sections[1].find('.move').removeClass('highlight1');
+                    $(e.target).addClass('highlight1');
                     frame = frame.slice(0, frame.indexOf('.'));     // extract frame #
                     me.board.position( me.recording[frame].pos );
                     el.$sections[3].append( '<span class="comment">' + me.recording[frame].comment + '</span>' );
                   });
               }
             }
-            else { //  exercise not yet created
-              // el.$sections[3].css( 'visibility', 'hidden' );
+            else { //  Learner mode, exercise not yet created
             }
           }
 

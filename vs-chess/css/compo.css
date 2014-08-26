@@ -22,110 +22,192 @@ div {
 }
 
 /* boards */
-#board1 {
-  margin-left: 0;
-  width: 320px;           /* 400 would be nice, but 320 lets us use the 'allow extra pieces' option */
-}
+    #board1 {
+      margin-left: 0;
+      width: 320px;           /* 400 would be nice, but 320 lets us use the 'allow extra pieces' option */
+    }
 
-#auxArea {
-  position: absolute;
-  top: 0px;
-  right: 0;
-  /* border: 1px dotted rgba(0, 0, 255, .1); */
-  width: 50%;
-  height: 100%;
-  font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 15px; 
-  padding-right: 10px;
-}
+/* auxArea encloses the entire auxillary gui for recording & showing exercises
+*/
+    #auxArea {
+      position: absolute;
+      top: 0px;
+      right: 0;
+      /* border: 1px dotted rgba(0, 0, 255, .1); */
+      width: 50%;
+      height: 100%;
+      font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 15px; 
+      padding-right: 10px;
+  }
 
-.section{
-  /* border: 1px dotted rgba(255, 0, 0, .1);  */
-  color: rgb(82, 78, 71);
-}
+/* General */
 
-#section0 {
-  height:44px;
-  overflow: hidden;
-}
+    #fenString {
+      font-size: 9px;
+    }
 
-#section1 {
-  min-height: 100px;
-  padding: 5px;
-}
+    .comment {
+      font-size: 11px;
+    }
 
-#section2 {
-  padding-top: 10px;
-  min-height: 100px;
-}
+/* Layout areas of the auxillary controls - 
+ * 4 divs, stacked vertically, on the right of the board
+ * Top row has images used as buttons,
+ * 2nd row has fen output,
+ * 3rd row holds the text input area for comments, 
+ * and shows the comments in learner mode
+ * 4th The reset gadget button
+ */
 
-#section1 p {
-  font-size: 12px;
-  margin: 5px 0;
-}
+    .section{
+      /* border: 1px dotted rgba(255, 0, 0, .1);  */
+      color: rgb(82, 78, 71);
+    }
 
-#section2 p {
-  font-size: 14px;
-  margin: 10px 0;
-}
+    .section p {
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
 
-#exerciseTypeChoices {
-  display: none;
-}
+/* Section 0  - top row of image buttons 
+*/
+    #section0 {
+      height:44px;
+      overflow: hidden;
+    }
 
-.pic {
-  display: inline-block;
-  height: 32px;
-  margin-right: 5px;
-}
+    .pic {
+      display: none;
+      height: 32px;
+      margin-right: 5px;
+    }
 
-.pic img {
-  height: 38px;
-}
+    .pic img {
+      height: 38px;
+    }
 
-.exercise {
-  display: none;
+    .rightButtons {
+      display: inline-block;
+      position: absolute;
+      right: 0;
+    }
+
+
+/* Section 1  - 
+*/
+    #exerciseTypeChoices {
+      display: none;
+    }
+
+    #section1 {
+      min-height: 100px;
+      padding: 5px;
+    }
+
+
+    #section1 p {
+      font-size: 12px;
+    }
+
+    #section1 h4 {
+      margin: 2px 0;
+    }
+
+
+/* Section 2  -  
+*/
+
+    #section2 {
+      padding-top: 10px;
+      min-height: 100px;
+    } 
+
+    #section2 p {
+     /*  font-size: 14px;  */
+    }
+
+    #commentEntry {
+      display: none;
+      width: 97%;
+      height: 100px;
+      border: 1px dotted #f0d9b5;
+    }
+
+
+    textarea:focus {
+        outline: none !important;
+        border: none;
+        box-shadow: 0 0 10px #f0d9b5;
+    }
+
+/* Section 3  -  
+*/
+
+/* Section 4  -  the Reset Gadget button 
+*/
+    #section4 {           /* */
+      position: absolute;
+      z-index:2;
+      bottom: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      /* background: red; */
+    }
+
+/* The Status message area
+*/
+    #statusMsg {
+      display:none;
+      color: black;
+      position: fixed;
+      z-index: 5;
+      top: 20%;
+      left: 20%;
+      height: 40%;
+      width: 40%;
+      background: red;
+      opacity: .9;
+      padding: 10px;
+      font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    #statusMsg h2 {
+      margin: 0;
+    }
+
+
+/* eye candy */
+
+.rounded {
+  -webkit-border-radius: 11px 11px 11px 11px;
+  border-radius: 11px 11px 11px 11px; 
 }
 
 .center {
   text-align: center;
 }
 
-textarea:focus {
-    outline: none !important;
-    border: none;
-    box-shadow: 0 0 10px #f0d9b5;
-}
-
-#commentEntry {
-  display: none;
-  width: 97%;
-  height: 150px;
-  border: 1px dotted #f0d9b5;
-}
-
-
 .highlight1 {
   background: rgb(240, 217, 181);
 }
 
-#fenString {
-  font-size: 9px;
-}
-
-
-
-/* eye candy */
+.darkBrown { color: rgb(181, 136, 99); }
 
 .cursor1 {
   cursor: pointer;
 }
 
-
 .shadow1 {
   box-shadow: 0 0 3px 0 rgba(108,106,95,0.6);
   -webkit-box-shadow: 0 0 3px 0 rgba(108,106,95,0.6);
   -moz-box-shadow: 0 0 3px 0 rgba(108,106,95,0.6);
+}
+
+.shadow2 {
+  -webkit-box-shadow: 3px 3px 5px 2px #9C9C9C;
+  box-shadow: 3px 3px 5px 2px #9C9C9C;
 }
 
 .bordered {
