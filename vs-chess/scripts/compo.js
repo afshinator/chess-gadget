@@ -23,7 +23,7 @@
       this.toggleBoard(false);
     },
 
-    detachedCallback: function(){
+    detachedCallback: function(){     // when is this ever called?
       this.toggleMouse(false);
       if(this.board) {
         this.board.destroy();
@@ -95,6 +95,7 @@
     },
 
 
+    // Run at gadget startup, and also if browser reload happens
     init: function() {
       this.ui.init( this );                               // initialize the UI component
       
@@ -105,10 +106,10 @@
         this.exerciseType = this.config.exerciseType;
         this.exerciseCreated = true;
         this.recording = this.config.recording;
-        // TODO: now build the auxillary controls based on exerciseType
-        this.ui.buildDisplay();
+        
+        this.ui.buildDisplay();                           // Build the auxillary controls based on exerciseType
       }
-      else {                                              // No exercise info found in config;
+      else {  // No exercise info found in config
         this.ui.promptForExerciseType();
       }
     },
@@ -182,7 +183,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
 
           el.$auxArea = $('#auxArea');
           el.$sections = [];
-          for (var i=0; i < 3; i++) {                                       
+          for (var i=0; i < 4; i++) {                                       
             el.$sections[i] = el.$auxArea.find( '#section' + i );
           }
           el.$commentEntry = el.$sections[2].find( '#commentEntry' );
@@ -215,26 +216,27 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
         },
 
 
-        // callback for snapshot button, excercise 1
+        // Callback for Snapshot button, excercise 1
         takeASnapshot = function() {    // callback for pressing the camera button in Snapshot exercise
-          me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val() } );
+          me.recording.push( { pos: me.newPos, comment: el.$commentEntry.val().trim() } );
           me.save( { exerciseType: me.exerciseType, recording: me.recording } );
           me.exerciseCreated = true;
 
           el.$sections[0].find( '.exercise1' ).off().css( 'display', 'none' );
-          el.$commentEntry.css( 'display', 'none' );
           el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.newPos + '</p>' );
-          el.$sections[2].append('<div><p><strong>Snapshot done.</strong></p><p>' + me.recording[0].comment + '</p></div>');
+          el.$sections[2].css('display', 'none');
+          el.$sections[3].append('<p><strong>Snapshot done.</strong></p><p>' + me.recording[0].comment + '</p>');
         },
 
 
+        // Callback for Sequence Record on/off button, excercise 2
         recordSequence = function(button) {
           if ( ! memo.recordingStarted ) {
             button.off().addClass('animate1');   // turn off catching these events, add class to indicate recording started
             memo.recordingStarted = true;
             me.recording.push({                  // save current position as starting position
                 pos: me.newPos || me.board.fen(), 
-                comment: el.$commentEntry.val(), 
+                comment: el.$commentEntry.val().trim(), 
                 delta: 'start' 
             });  
             el.$sections[0].find( '#pic4' ).off().css( 'display', 'none' );   // hide reset button
@@ -262,6 +264,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             button.one('click', function() {     // next click stops the recording
               button.removeClass('animate1');
               el.$sections[0].find( '#pic3' ).off().fadeOut();      // turn off erase button
+              el.$sections[2].css('display', 'none');
               me.save( { exerciseType: me.exerciseType, recording: me.recording } );
               me.exerciseCreated = true;
               memo.recordingFinished = true;
@@ -317,50 +320,52 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
           
 
           if ( isAuthorMode ) {           // --> Author mode
+            el.$sections[0].css( 'visibility', 'visible' );
+
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
-                // el.$sections[2].empty().append('<p id="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"><p></div>');
               }
             }
             else {  //  exercise not yet created
-              el.$sections[0].css( 'visibility', 'visible' );
-              el.$sections[2].css( 'visibility', 'visible' );
+              el.$sections[2].css( 'display', 'block' );
+              // el.$sections[3].css( 'visibility', 'visible' );
             }
           }
           else {                          // --> Learner mode
             el.$sections[0].css( 'visibility', 'hidden' );
+            
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
-                el.$sections[2].empty().append('<p class="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
-                makeButton( el.$sections[2].find('#showSnap'), function() {
+                el.$sections[3].empty().append('<p class="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
+                makeButton( el.$sections[3].find('#showSnap'), function() {
                   me.board.position( me.recording[0].pos );
                   el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.recording[0].pos + '</p>' );
                 });
               }
               if ( me.exerciseType === 'Sequence' ) {
-                el.$sections[2].empty(); 
-                el.$sections[2].append('<div class="center"> \
+                el.$sections[3].empty(); 
+                el.$sections[3].append('<div class="center"> \
                   <img id="goLeft" src="vs-chess/img/left.jpg" height="70px" width="70px"> \
                   <img id="goRight" src="vs-chess/img/right.jpg" height="70px" width="70px"> \
                   </div><p class="comment">Click on a move above to jump to that position.</p>');
 
                 // TODO: handlers for left/right buttons
-                el.$sections[2].find('img').addClass('faded1');     // TODO: for now, show that its disabled
-                el.$sections[1].find('.move').
-                  addClass('cursor1').
+                el.$sections[3].find('img').addClass('faded1');     // TODO: for now, show that its disabled
+
+                el.$sections[1].find('.move').addClass('cursor1').
                   on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
                     var frame = $(e.target).text().trim();          // get text from the html for frame #
-                    el.$sections[2].find('.comment').remove();      // 
-                    el.$sections[1].find('.move').removeClass('highlight1');
-                    $(e.target).addClass('highlight1');
+                    el.$sections[3].find('.comment').remove();      // 
+                    el.$sections[1].find('.move').removeClass('highlight1').css('font-weight', 'normal');
+                    $(e.target).addClass('highlight1').css('font-weight', 'bold');
                     frame = frame.slice(0, frame.indexOf('.'));     // extract frame #
                     me.board.position( me.recording[frame].pos );
-                    el.$sections[2].append( '<span class="comment">' + me.recording[frame].comment + '</span>' );
+                    el.$sections[3].append( '<span class="comment">' + me.recording[frame].comment + '</span>' );
                   });
               }
             }
             else { //  exercise not yet created
-              el.$sections[2].css( 'visibility', 'hidden' );
+              // el.$sections[3].css( 'visibility', 'hidden' );
             }
           }
 
