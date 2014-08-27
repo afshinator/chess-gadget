@@ -50,7 +50,8 @@
     });
   };
 
-  //starting point of the gadget
-  new Gadget();
+  window.addEventListener('WebComponentsReady', function() {
+    new Gadget();
+  });  //starting point of the gadget
 
 })();

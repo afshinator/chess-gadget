@@ -132,10 +132,10 @@
         }
       }
 
-console.log('<---- attrName : ' + attrName + '--- this.editable: ' + this.editable + ' --- pieceMove: ' + pieceMoved() );
+// console.log('<---- attrName : ' + attrName + '--- this.editable: ' + this.editable + ' --- pieceMove: ' + pieceMoved() );
 // console.log('--old ' + oldVal );  
 // console.log('--new ' + newVal );
-console.log('------> this.config: ' + JSON.stringify(this.config) );
+// console.log('------> this.config: ' + JSON.stringify(this.config) );
 
       // Upon gadget startup, this.config doesn't get persisted gadget options right away
 
@@ -253,8 +253,14 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
             button.off().addClass('animate1');   // turn off catching these events, add class to indicate recording started
 
             if (  memo.recordingFinished ) {      // A previous recording exists
-
-            } else {
+              me.exerciseCreated = false;
+              el.$sections[3].find('.comment').remove();      // 
+              el.$sections[1].find('.move').removeClass('highlight1');
+              me.board.position( me.recording[ me.recording.length - 1 ].pos );
+              el.$sections[1].find('.move').last().addClass('highlight1');
+              // el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );              
+            } 
+            else {            // Brand new recording
               me.recording.push({                  // save current position as starting position
                   pos: me.newPos || me.board.fen(), 
                   comment: el.$commentEntry.val().trim(), 
@@ -280,28 +286,15 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
                 memo.isDeleting = true;
                 me.recording.pop();
                 me.board.position( me.recording[ me.recording.length - 1 ].pos );
-                $section.find('.move').last().remove();
-                $section.find('.move').last().addClass( 'highlight1' );
+                $section.find( '.move' ).last().remove();
+                $section.find( '.move' ).last().addClass( 'highlight1' );
 
                 me.save( { recording: me.recording } );
               }
             });
 
             // Handler for next click to stop the recording
-            button.one('click', stopRecordingSequence
-
-            // function() {     // next click stops the recording
-            //   button.removeClass('animate1')    // turn off rotation effect
-            //     .hide()                         // make it flash off/on to emphasize it was pressed
-            //     .fadeIn('250', function() {});
-            //   el.$sections[0].find( '#pic3' ).off().fadeOut();      // turn off erase button
-            //   statusMessage("Recording sequence done.", true );
-            //   me.save( { exerciseType: me.exerciseType, recording: me.recording } );
-            //   me.exerciseCreated = true;
-            //   memo.recordingFinished = true;
-            //   makeButton( button, recordSequence );    // setup to enable restarting recording
-            // }
-            );
+            button.one( 'click', stopRecordingSequence );
           // }
         },
 
@@ -343,7 +336,7 @@ console.log('------> this.config: ' + JSON.stringify(this.config) );
 
             case 'Sequence':
               el.$sections[0].find( '.exercise2' ).css( 'display', 'inline-block' );
-              el.$commentEntry.attr("placeholder", "Add optional comment for this scene.");
+              el.$commentEntry.attr("placeholder", "Add optional comment for the next move.");
               el.$sections[0].find( '#pic3' ).hide(); 
               makeButton( el.$sections[0].find('#pic2'), recordSequence );
               break;
