@@ -97,7 +97,7 @@ div {
 /* Section 1  - 
 */
     #exerciseTypeChoices {
-      display: none;
+   /*    display: none;  */
     }
 
     #section1 {

@@ -40,17 +40,6 @@
       }
     },
 
-    // toggle listeners on 'mousemove' -- not used anymore
-    // toggleMouse: function(flag){
-    //   if(flag) {
-    //     this.$el.on('mousemove', function(){
-    //       this.lazySave();
-    //     }.bind(this));
-    //   } else {
-    //     this.$el.off('mousemove');
-    //   }
-    // },
-
 
     toggleBoard: function(flag){
       // Handler for catching chessboard moves
@@ -94,12 +83,19 @@
     },
 
 
+    reset:function() {
+      this.exerciseType = undefined;
+      this.exerciseCreated = false;      
+      this.recording = [];
+    },
+
+
     // Run at gadget startup, and also if browser reload happens
     init: function() {
       this.ui.init( this );                               // initialize the UI component
       
-      this.exerciseCreated = false;  
-      this.recording = [];
+      this.reset();
+
       // this.config contains authors persisted exercise info
       if ( this.config.exerciseType !== undefined && this.config.exerciseType !== null ) {
         this.exerciseType = this.config.exerciseType;
@@ -109,12 +105,12 @@
         this.ui.buildDisplay();                           // Build the auxillary controls based on exerciseType
       }
       else {  // No exercise info found in config
-  console.log('###### prompting again' );
         this.ui.promptForExerciseType();
       }
     },
 
 
+    // Entry point for gadget and UI widgets functionality - 'data-config' is received upon startup
     attributeChangedCallback: function(attrName, oldVal, newVal){
       function pieceMoved() {     // returns true if data-config event was a piece move (rather than prop sheet change)
         var oldV, newV;
@@ -128,7 +124,8 @@
         } else {
           oldV = JSON.parse(oldVal);  newV = JSON.parse(newVal);
           if ( oldV.position === undefined && newV.position === undefined ) return false;  
-          return !_.isEqual( oldV.position, newV.position );          // TODO: _.isEqual was necessary for comparing position objects, but not for fen strings
+          // return !_.isEqual( oldV.position, newV.position );          
+          return ! ( oldV.position ===  newV.position );          // TODO: _.isEqual was necessary for comparing position objects, but not for strings
         }
       }
 
@@ -136,13 +133,11 @@
 // console.log('--old ' + oldVal );  
 // console.log('--new ' + newVal );
 // console.log('------> this.config: ' + JSON.stringify(this.config) );
+// console.log('+-----> this.firstTime : ' + this.firstTime  );
 
-      this.memo = this.memo || { firstTime : true };      // todo: it'll break if used again in any other method
-
-      if ( this.memo['firstTime'] === true ) {        // First time this function is called, 
-      //  this.toggleBoard(this.editable);            // Instantiate the board object before init() is called
+      if ( this.firstTime === undefined ) {           // First time this handler fn is called (at gadget startup), 
+        this.firstTime = false;  
         this.init();                                  // All other initialization, including asking about exercise type
-        this.memo['firstTime'] = false;               // So this doesn't run again.
       }
 
       switch (attrName) {
@@ -176,17 +171,26 @@
           },
           me = null;            // 'this' context of main object
 
-        init = function( thisPointer ) {
-          me = thisPointer;                      
-
-          el.$auxArea = $('#auxArea');
-          el.$sections = [];
-          for (var i=0; i < 5; i++) {                                       
-            el.$sections[i] = el.$auxArea.find( '#section' + i );
-          }
-          el.$status = $('#statusMsg').hide();
-          el.$commentEntry = el.$sections[2].find( '#commentEntry' );
+        reset = function() {  console.log( '(UI RESET))))))))  ' );
+          memo.recordingStarted = false;
+          memo.recordingFinished = false;
         },
+
+        init = function( thisPointer ) {
+          if ( me === null ) { 
+            me = thisPointer;                      
+
+            el.$auxArea = $('#auxArea');
+            el.$sections = [];
+            for (var i=0; i < 5; i++) {                                       
+              el.$sections[i] = el.$auxArea.find( '#section' + i );
+            }
+            el.$status = $('#statusMsg').hide();
+            el.$commentEntry = el.$sections[2].find( '#commentEntry' );
+          }
+          reset();
+        },
+
 
         statusMessage = function(str, bCenter) {
           el.$status.find('.msg').remove();
@@ -197,13 +201,23 @@
             });
         },
 
+
         promptForExerciseType = function() {
-          el.$auxArea.find( 'input:radio[name="exType"]' ).change( function() {
+          var html = 
+            '<div id="exerciseTypeChoices" class="author-only"> \
+              <legend>Choose exercise type to create:</legend> \
+              <input type="radio" name="exType" value="Snapshot" /> Snapshot<br/> \
+              <input type="radio" name="exType" value="Sequence" /> Sequence<br/> \
+              <input type="radio" name="exType" value="Challenge" disabled="disabled"/> Challenge<br/> \
+            </div>';
+
+          el.$sections[1].append( html );
+
+          el.$sections[1].find( 'input:radio[name="exType"]' ).change( function() {
             me.exerciseType = $(this).val();
-            // me.save( { exerciseType: me.exerciseType } );   // TODO: maybe dont persist this yet, wait until exercise is completed
-            $(this).off();
-            el.$sections[1].find('#exerciseTypeChoices').css( 'display', 'none' );
-            buildDisplay();
+            el.$sections[1].empty(); // why can't I $(this).remove() ?
+            // Now we know what kind of exercise controls to display
+            buildDisplay();   
           });
         },
 
@@ -298,7 +312,7 @@
         // called after hittign recording button to stop, or switch to learner mode in the middle of recording
         stopRecordingSequence = function() {   
           var button = el.$sections[0].find('#pic2');
-          button.off().removeClass('animate1') ;
+          button.off().removeClass('animate1');
           el.$sections[0].find( '#pic3' ).off().fadeOut();      // turn off erase button
           if ( me.editable ) {    
             statusMessage("Recording sequence done. Click recorder button again to add or delete frames.", true ); 
@@ -310,36 +324,43 @@
         },
 
 
-        // At startup time, display ui components based on which exercise type was chosen
-        buildDisplay = function() {
-          var cache;
-
-          el.$sections[1].addClass( 'bordered' );
-          el.$commentEntry.css( 'display', 'block' );            // show comment entry textarea
-
-          makeButton( el.$sections[0].find( '#pic4' ), function(){ me.board.start(true); } ); // reset all the board pieces
-          makeButton( el.$sections[0].find( '#pic5' ), function(){ me.board.clear(true); } ); // clear the board entirely
-          makeButton( el.$sections[4].css( 'display', 'block' ), function(e) {  // reset gadget button
+        // To restart all over - the button on the bottom right in Author mode
+        makeResetButton = function( $el ) {        
+          makeButton( $el.show(), function(e) {  // reset gadget button
               e.fadeOut(50, function() {
                 e.fadeIn(50, function() {
                   if ( confirm('Confirm that you want to reset the widget and forget your data?') ) {
                     console.log( '!!! Resetting Chess gadget !!!' );
                     el.$sections[0].find( '.exercise' ).off().css( 'display', 'none' );
+                    el.$sections[0].find('#pic2').removeClass('animate1');  // in case was in the middle of recording
                     el.$sections[1].removeClass( 'bordered' ).empty();
+                    el.$sections[3].empty();
                     el.$commentEntry.css( 'display', 'none' );
-                    me.recording = [];
-                    me.exerciseType = null;                    
-                    me.exerciseCreated = false;
-                    me.memo['firstTime'] = true;
-                    me.save( { exerciseType: me.exerciseType, recording: me.recording } );
+                    el.$status.hide();
+                    me.reset();
+                    me.firstTime = true;
+                    reset();
+                    // me.save( { exerciseType: me.exerciseType, recording: me.recording } );
+                    me.save( { exerciseType: undefined, recording: undefined } );
                     me.board.position( 'start' );
                     e.off();
-                    el.$sections[1].find('#exerciseTypeChoices').css( 'display', 'inline' );
-                    me.init();
+                    e.hide();
+                    promptForExerciseType();
                   }
                 });
               });
             });
+        },
+
+
+        // At startup time, display ui components based on which exercise type was chosen
+        buildDisplay = function() {
+          el.$sections[1].addClass( 'bordered' );
+          el.$commentEntry.css( 'display', 'block' );            // show comment entry textarea
+
+          makeButton( el.$sections[0].find( '#pic4' ), function(){ me.board.start(true); } ); // reset all the board pieces
+          makeButton( el.$sections[0].find( '#pic5' ), function(){ me.board.clear(true); } ); // clear the board entirely
+          makeResetButton( el.$sections[4] );     // reset the whole gadget button
 
           switch ( me.exerciseType ) {
             case 'Snapshot':
@@ -360,25 +381,15 @@
         },
 
 
+        // Callback for player mode switches between Author and Learner modes,
+        // gadget receives the event at startup time once as well. 
         authorLearnerToggle = function( isAuthorMode ) {
-          var $tmp;
-
-          // Case where no prerecorded exercise and author has yet to choose which one
-          if ( me.exerciseType === undefined ) {
-            $tmp = el.$sections[1].find( '#exerciseTypeChoices' );
-            if ( isAuthorMode ) {
-              $tmp.css( 'display', 'inline' );
-            } else {
-              $tmp.css( 'display', 'none' );
-            }
-            return;   
-          }
-          
-
           if ( isAuthorMode ) {           // --> Author mode
-            el.$sections[0].find('.author-only').css( 'visibility', 'visible' );
+            el.$auxArea.find('.author-only').css( 'visibility', 'visible' );
+
+            if ( me.exerciseType === undefined ) return;
+
             el.$sections[2].css( 'display', 'block' );
-            el.$sections[4].css( 'visibility', 'visible');
 
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {
@@ -390,9 +401,11 @@
             }
           }
           else {                          // --> Learner mode
-            el.$sections[0].find('.author-only').css( 'visibility', 'hidden' );
+            el.$auxArea.find('.author-only').css( 'visibility', 'hidden' );
+
+            if ( me.exerciseType === undefined ) return;
+
             el.$sections[2].css( 'display', 'none' );
-            el.$sections[4].css( 'visibility', 'hidden');
 
             if ( me.exerciseCreated ) {
               if ( me.exerciseType === 'Snapshot' ) {             // Snapshot ------------------
