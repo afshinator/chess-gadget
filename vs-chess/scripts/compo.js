@@ -47,7 +47,7 @@
         this.oldPos = ChessBoard.objToFen(oldPos);
         this.newPos = ChessBoard.objToFen(newPos);
         this.ui.moveEvent(oldPos, newPos);
-        console.log("*** onChange():  editable:" + this.editable + "  Old position: " + this.oldPos +  "  New position: " + this.newPos  );
+// console.log("*** onChange():  editable:" + this.editable + "  Old position: " + this.oldPos +  "  New position: " + this.newPos  );
       };
 
       var cfg, 
@@ -171,7 +171,7 @@
           },
           me = null;            // 'this' context of main object
 
-        reset = function() {  console.log( '(UI RESET))))))))  ' );
+        reset = function() {
           memo.recordingStarted = false;
           memo.recordingFinished = false;
         },
