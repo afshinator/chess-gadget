@@ -265,6 +265,8 @@
 
           if (  memo.recordingFinished ) {      // A previous recording exists
             me.exerciseCreated = false;
+            el.$sections[0].find( '.arrow' )    // Turn off left/right buttons during recording
+                  .removeClass( 'cursor1' ).addClass( 'faded1' ).off();
             el.$sections[3].find('.comment').remove();      // 
             el.$sections[1].find('.move').removeClass('highlight1');
             me.board.position( me.recording[ me.recording.length - 1 ].pos );
@@ -395,6 +397,9 @@
               if ( me.exerciseType === 'Snapshot' ) {
                 el.$sections[3].find('#showSnap').off().remove();
               }
+              if ( me.exerciseType === 'Sequence' ) {
+                // TODO : nothing yet
+              }
             }
             else {  //  exercise not yet created
               el.$sections[2].css( 'display', 'block' );
@@ -461,6 +466,7 @@
               if ( me.exerciseType === 'Sequence' ) {
                 if ( memo.recordingStarted ) {
                   stopRecordingSequence();      // pretend stop button was hit.
+                  authorLearnerToggle( isAuthorMode );
                 }
               }
             }
