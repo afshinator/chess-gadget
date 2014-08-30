@@ -197,7 +197,7 @@
           el.$status.css('display', 'block')
             .append( '<h2 class="msg">' + str + '</h2>' )
             .one( 'click', function() {
-              $(this).fadeOut('1000');
+              $(this).fadeOut('750');
             });
         },
 
@@ -408,6 +408,7 @@
             el.$sections[2].css( 'display', 'none' );
 
             if ( me.exerciseCreated ) {
+              el.$status.hide();
               if ( me.exerciseType === 'Snapshot' ) {             // Snapshot ------------------
                 // el.$sections[3].empty().append('<p class="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
                 el.$sections[3].append( '<div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
@@ -420,7 +421,29 @@
               }
               if ( me.exerciseType === 'Sequence' ) {             // Sequence ------------------
                 el.$sections[3].empty();
-                el.$sections[0].find('.pic').removeClass( 'faded1' );
+                el.$sections[0].find( '.pic' ).removeClass( 'faded1' );
+                el.$sections[0].find( '.arrow' )        // TODO: refactor. make dry, this shares a lot of code with the handler below
+                  .addClass( 'cursor1' )
+                  .on( 'click', function(e) {
+                    var frame = el.$sections[1].find('.highlight1').text().trim();
+                    el.$sections[3].find('.comment').remove();
+                    // el.$sections[1].find('.move').removeClass('highlight1');
+                    frame = ( frame.slice(0, frame.indexOf('.')) ) * 1;     // extract frame #, cast to number           
+                    if ( $(this).context.id === 'goLeft' )  {
+                      if ( frame == 0 ) { return; }
+                      el.$sections[1].find('.highlight1').removeClass('highlight1').prev().addClass('highlight1');
+                      frame--;
+                    }
+                    else {            // go Right 
+                      if ( frame == me.recording.length - 1 ) { return; }
+                      el.$sections[1].find('.highlight1').removeClass('highlight1').next().addClass('highlight1');
+                      frame++;
+                    }
+                    me.board.position( me.recording[frame].pos );
+                    el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );
+                  });
+
+
                 el.$sections[1].find('.move')
                   .addClass('cursor1')
                   .on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
