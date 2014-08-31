@@ -135,7 +135,9 @@
 // console.log('------> this.config: ' + JSON.stringify(this.config) );
 // console.log('+-----> this.firstTime : ' + this.firstTime  );
 
-      if ( this.firstTime === undefined ) {           // First time this handler fn is called (at gadget startup), 
+      // If this is the first time this handler fn is called (at gadget startup),
+      // then initialize the auxially UI stuff.   firstTime = true when reset button was used
+      if ( this.firstTime === undefined ) {            
         this.firstTime = false;  
         this.init();                                  // All other initialization, including asking about exercise type
       }
@@ -192,12 +194,13 @@
         },
 
 
+        // Popup a message after finishing a snapshot or sequence
         statusMessage = function(str, bCenter) {
           el.$status.find('.msg').remove();
           el.$status.css('display', 'block')
             .append( '<h2 class="msg">' + str + '</h2>' )
             .one( 'click', function() {
-              $(this).fadeOut('750');
+              $(this).fadeOut('150');
             });
         },
 
@@ -314,15 +317,63 @@
         // called after hittign recording button to stop, or switch to learner mode in the middle of recording
         stopRecordingSequence = function() {   
           var button = el.$sections[0].find('#pic2');
+
           button.off().removeClass('animate1');
           el.$sections[0].find( '#pic3' ).off().fadeOut();      // turn off erase button
-          if ( me.editable ) {    
-            statusMessage("Recording sequence done. Click recorder button again to add or delete frames.", true ); 
-          }
+
           me.save( { exerciseType: me.exerciseType, recording: me.recording } );
           me.exerciseCreated = true;
           memo.recordingFinished = true;
+          if ( me.editable ) {    
+            statusMessage("Recording sequence done. Click recorder button again to add or delete frames.", true ); 
+          }
           makeButton( button, recordSequence );    // setup to enable restarting recording
+
+          enableArrowButtons();
+          enableClickOnFrame();
+        },
+
+
+        // Make arrow buttons clickable for Author & Leaner; called after a recording is finished
+        enableArrowButtons = function() {
+          el.$sections[0].find( '.pic' ).removeClass( 'faded1' );   // show arrow buttons
+          el.$sections[0].find( '.arrow' )        // TODO: refactor. make dry, this shares a lot of code with the handler below
+            .addClass( 'cursor1' )
+            .on( 'click', function(e) {
+              var frame = el.$sections[1].find('.highlight1').text().trim();
+
+              el.$sections[3].find('.comment').remove();
+              frame = ( frame.slice(0, frame.indexOf('.')) ) * 1;     // extract frame #, cast to number           
+              if ( $(this).context.id === 'goLeft' )  {
+                if ( frame == 0 ) { return; }
+                el.$sections[1].find('.highlight1').removeClass('highlight1').prev().addClass('highlight1');
+                frame--;
+              }
+              else {            // go Right 
+                if ( frame == me.recording.length - 1 ) { return; }
+                el.$sections[1].find('.highlight1').removeClass('highlight1').next().addClass('highlight1');
+                frame++;
+              }
+              me.board.position( me.recording[frame].pos );
+              el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );
+            });
+        },
+
+
+        // Make each frame in sequence recording clickable for Author & Leaner; called after a recording is finished
+        enableClickOnFrame = function() {
+          el.$sections[1].find('.move')
+            .addClass('cursor1')
+            .on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
+              var frame = $(e.target).text().trim();          // get text from the html for frame #
+
+              el.$sections[3].find('.comment').remove();      // 
+              el.$sections[1].find('.move').removeClass('highlight1');
+              $(e.target).addClass('highlight1');
+              frame = frame.slice(0, frame.indexOf('.'));     // extract frame #
+              me.board.position( me.recording[frame].pos );
+              el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );
+            });
         },
 
 
@@ -359,7 +410,12 @@
         buildDisplay = function() {
           el.$sections[1].addClass( 'bordered' );
           el.$commentEntry.css( 'display', 'block' );            // show comment entry textarea
-
+// console.log('***** me.exerciseType ' + me.exerciseType );
+// console.log('***** me.exerciseCreated ' + me.exerciseCreated );
+// console.log('***** memo.recordingStarted ' + memo.recordingStarted);
+// console.log('***** memo.recordingFinished ' + memo.recordingFinished);
+// console.log('***** me.firstTime ' + me.firstTime );
+// console.log('***** me.editable ' + me.editable);
           makeButton( el.$sections[0].find( '#pic4' ), function(){ me.board.start(true); } ); // reset all the board pieces
           makeButton( el.$sections[0].find( '#pic5' ), function(){ me.board.clear(true); } ); // clear the board entirely
           makeResetButton( el.$sections[4] );     // reset the whole gadget button
@@ -372,7 +428,7 @@
 
             case 'Sequence':
               el.$sections[0].find( '.exercise2' ).css( 'display', 'inline-block' );
-              el.$commentEntry.attr("placeholder", "Add optional comment for the next move.");
+              el.$commentEntry.attr( 'placeholder', 'Add optional comment for the next move.' );
               el.$sections[0].find( '#pic3' ).hide(); 
               makeButton( el.$sections[0].find( '#pic2' ), recordSequence );
               break;
@@ -380,6 +436,18 @@
             default:
               break;
           }
+
+          // Case where after recording, a browser refresh happened
+          if ( me.exerciseCreated === true && me.exerciseType === 'Sequence' ) { 
+            memo.recordingFinished = true;
+// console.log('Verify that this only comes up after recording, and browser refresh.');
+            el.$sections[1]
+              .empty()
+              .append( generateDeltaList( me.recording[ me.recording.length - 1 ].delta ) );
+            enableArrowButtons();
+            enableClickOnFrame();
+          }
+
         },
 
 
@@ -426,40 +494,6 @@
               }
               if ( me.exerciseType === 'Sequence' ) {             // Sequence ------------------
                 el.$sections[3].empty();
-                el.$sections[0].find( '.pic' ).removeClass( 'faded1' );
-                el.$sections[0].find( '.arrow' )        // TODO: refactor. make dry, this shares a lot of code with the handler below
-                  .addClass( 'cursor1' )
-                  .on( 'click', function(e) {
-                    var frame = el.$sections[1].find('.highlight1').text().trim();
-                    el.$sections[3].find('.comment').remove();
-                    // el.$sections[1].find('.move').removeClass('highlight1');
-                    frame = ( frame.slice(0, frame.indexOf('.')) ) * 1;     // extract frame #, cast to number           
-                    if ( $(this).context.id === 'goLeft' )  {
-                      if ( frame == 0 ) { return; }
-                      el.$sections[1].find('.highlight1').removeClass('highlight1').prev().addClass('highlight1');
-                      frame--;
-                    }
-                    else {            // go Right 
-                      if ( frame == me.recording.length - 1 ) { return; }
-                      el.$sections[1].find('.highlight1').removeClass('highlight1').next().addClass('highlight1');
-                      frame++;
-                    }
-                    me.board.position( me.recording[frame].pos );
-                    el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );
-                  });
-
-
-                el.$sections[1].find('.move')
-                  .addClass('cursor1')
-                  .on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
-                    var frame = $(e.target).text().trim();          // get text from the html for frame #
-                    el.$sections[3].find('.comment').remove();      // 
-                    el.$sections[1].find('.move').removeClass('highlight1');
-                    $(e.target).addClass('highlight1');
-                    frame = frame.slice(0, frame.indexOf('.'));     // extract frame #
-                    me.board.position( me.recording[frame].pos );
-                    el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );
-                  });
               }
             }
             else { //  Learner mode, exercise not yet created
@@ -488,12 +522,10 @@
 
 
         // put together html string containing the delta's (changes) between each recorded move
-        generateDeltaList = function( oldPos, newPos ) {
+        // called mainly by moveEvent() but also after browser refresh prompts re-displaying recorded sequence
+        generateDeltaList = function( moveDetail ) {
           var i, 
-            moves = '<p id="movements"><span id="move0" class="move">0.start</span>',
-            moveDetail;
-
-            moveDetail = objectDelta( oldPos, newPos );
+            moves = '<p id="movements"><span id="move0" class="move">0.start</span>';
 
             for ( i = 1; i < me.recording.length; i++ ) {
               moves += ( '   <span id="move' + i + '" class="move ' );
@@ -520,13 +552,15 @@
           }
 
           // For sequence, during recording 
+          var lastDelta;
           if ( memo.recordingStarted && !memo.recordingFinished && !memo.isDeleting) {
+            lastDelta = objectDelta( oldPos, newPos );
             me.recording.push({ pos: me.newPos,                               // Record the movement for the sequence
                                 comment: el.$commentEntry.val(), 
-                                delta : objectDelta( oldPos, newPos )
+                                delta : lastDelta
                               });
             el.$commentEntry.val('');            // empty out to enable next comment            
-            el.$sections[1].empty().append( generateDeltaList( oldPos, newPos ) );
+            el.$sections[1].empty().append( generateDeltaList( lastDelta ) );
           }
 
           if ( memo.isDeleting ) memo.isDeleting = false;
