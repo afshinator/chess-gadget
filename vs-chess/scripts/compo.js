@@ -211,8 +211,8 @@
               <legend>Choose exercise type to create:</legend> \
               <input type="radio" name="exType" value="Snapshot" /> Snapshot<br/> \
               <input type="radio" name="exType" value="Sequence" /> Sequence<br/> \
-              <input type="radio" name="exType" value="Challenge" disabled="disabled"/> Challenge<br/> \
-            </div>';
+              <input type="radio" name="exType" value="Challenge"/> Challenge<br/> \
+            </div>';    // disabled="disabled"
 
           el.$sections[1].append( html );
 
@@ -262,7 +262,7 @@
         },
 
 
-        // Callback for Sequence Record on/off button, excercise 2
+        // Callback for Sequence Record on/off button, EXERCISE 2
         recordSequence = function(button) {     
           button.off().addClass('animate1');   // turn off catching these events, add class to indicate recording started
 
@@ -310,12 +310,12 @@
           });
 
           // Handler for next click to stop the recording
-          button.one( 'click', stopRecordingSequence );
+          button.one( 'click', stopRecording );
         },
 
 
         // called after hittign recording button to stop, or switch to learner mode in the middle of recording
-        stopRecordingSequence = function() {   
+        stopRecording = function() {   
           var button = el.$sections[0].find('#pic2');
 
           button.off().removeClass('animate1');
@@ -406,9 +406,56 @@
         },
 
 
+        // Callback for Challenge Record on/off button, EXERCISE 3
+        recordChallenge = function(button) {
+          button.off().addClass('animate1'); 
+          if (  memo.recordingFinished ) {      // A previous recording exists
+          
+          } 
+          else {            // Brand new recording
+            me.recording.push({                  // save current position as starting position
+                pos: me.newPos || me.board.fen(), 
+                comment: el.$commentEntry.val().trim(), 
+                delta: 'start' 
+            });
+            el.$sections[1].empty()
+              .append( '<p>Starting position for challenge set.  Now move a chess piece to correct end state.</p>');
+          }
+
+          el.$commentEntry.hide();
+          memo.recordingStarted = true; 
+          memo.recordingFinished = false;
+
+          // el.$sections[0].find( '#pic3b' ).off().fadeIn();                   // show erase button
+          el.$sections[0].find( '#pic4' ).off().css( 'display', 'none' );   // hide reset button
+          el.$sections[0].find( '#pic5' ).off().css( 'display', 'none' );   // hide clear butto
+          el.$sections[3].append( '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
+
+          // Next move event will catch the target position, and then triggers stopRecordingChallenge
+        },
+
+
+        stopRecordingChallenge = function() {
+          var button = el.$sections[0].find( '#pic3b' );
+
+          el.$sections[0].find( '#pic3c' ).off().fadeIn();      // show erase button
+          button.off().removeClass('animate1');
+
+          me.save( { exerciseType: me.exerciseType, recording: me.recording } );
+          me.exerciseCreated = true;
+          memo.recordingFinished = true;
+          // el.$sections[3].append( '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
+
+          if ( me.editable ) {    
+            statusMessage("Recording challenge done. ", true ); 
+          }
+
+          enableClickOnFrame();
+        },
+
+
         // At startup time, display ui components based on which exercise type was chosen
         buildDisplay = function() {
-          el.$sections[1].addClass( 'bordered' );
           el.$commentEntry.css( 'display', 'block' );            // show comment entry textarea
 // console.log('***** me.exerciseType ' + me.exerciseType );
 // console.log('***** me.exerciseCreated ' + me.exerciseCreated );
@@ -422,15 +469,23 @@
 
           switch ( me.exerciseType ) {
             case 'Snapshot':
+              el.$sections[1].addClass( 'bordered' );
               el.$sections[0].find( '.exercise1' ).css( 'display', 'inline-block' );  // show top row buttons for this exercise          
               makeButton( el.$sections[0].find( '#pic1' ), takeASnapshot );
               break;
 
             case 'Sequence':
+              el.$sections[1].addClass( 'bordered' );
               el.$sections[0].find( '.exercise2' ).css( 'display', 'inline-block' );
-              el.$commentEntry.attr( 'placeholder', 'Add optional comment for the next move.' );
+              el.$commentEntry.attr( 'placeholder', 'Add optional comment for the next move' );
               el.$sections[0].find( '#pic3' ).hide(); 
               makeButton( el.$sections[0].find( '#pic2' ), recordSequence );
+              break;
+
+            case 'Challenge':
+              el.$sections[0].find( '.exercise3' ).css( 'display', 'inline-block' );
+              el.$commentEntry.attr( 'placeholder', 'Add instructions for this challenge' );
+              makeButton( el.$sections[0].find( '#pic3b' ), recordChallenge );
               break;
 
             default:
@@ -499,7 +554,7 @@
             else { //  Learner mode, exercise not yet created
               if ( me.exerciseType === 'Sequence' ) {
                 if ( memo.recordingStarted ) {
-                  stopRecordingSequence();      // pretend stop button was hit.
+                  stopRecording();      // pretend stop button was hit.
                   authorLearnerToggle( isAuthorMode );
                 }
               }
@@ -525,10 +580,11 @@
         // called mainly by moveEvent() but also after browser refresh prompts re-displaying recorded sequence
         generateDeltaList = function( moveDetail ) {
           var i, 
-            moves = '<p id="movements"><span id="move0" class="move">0.start</span>';
+            moves = '<p id="movements"><span id="move0" class="move chicklet1 ">0.start</span>';
 
             for ( i = 1; i < me.recording.length; i++ ) {
-              moves += ( '   <span id="move' + i + '" class="move ' );
+              moves += ( '   <span id="move' + i + '" class="move chicklet1 rounded ' );
+              if ( me.exerciseType === 'Challenge' ) moves += 'chicklet2 ';    // class for Challenge
               if ( i === me.recording.length - 1 ) {
                 moves += ( 'highlight1">    ' + i + '.' + moveDetail );
               } else {
@@ -560,7 +616,16 @@
                                 delta : lastDelta
                               });
             el.$commentEntry.val('');            // empty out to enable next comment            
-            el.$sections[1].empty().append( generateDeltaList( lastDelta ) );
+            // el.$sections[1].empty().append( generateDeltaList( lastDelta ) );
+
+            if ( me.exerciseType === 'Challenge' ) {
+              el.$sections[1].empty().append( '<h4>Challenge:</h4>')
+                .append( generateDeltaList( lastDelta ) );
+              stopRecordingChallenge();
+            } 
+            else { // Sequence, but not Snapshot
+              el.$sections[1].empty().append( generateDeltaList( lastDelta ) );
+            }
           }
 
           if ( memo.isDeleting ) memo.isDeleting = false;

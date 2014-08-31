@@ -187,6 +187,18 @@ div {
 
 /* eye candy */
 
+.chicklet1 {
+  padding: 2px;
+  font-size:16px;
+  background: #eee;
+}
+
+.chicklet2 {
+  padding: 4px;
+
+}
+
+
 .rounded {
   -webkit-border-radius: 11px 11px 11px 11px;
   border-radius: 11px 11px 11px 11px; 
