@@ -2,6 +2,8 @@
 
 (function(){
 
+// "use strict";
+
   var _doc = (document._currentScript || document.currentScript).ownerDocument;
   var _template = _doc.querySelector('template#vs-chess-template');
 
@@ -169,6 +171,7 @@
           memo = {
             recordingStarted : false,
             recordingFinished: false,
+            challengeStarted : false,
             isDeleting : false
           },
           me = null;            // 'this' context of main object
@@ -176,6 +179,7 @@
         reset = function() {
           memo.recordingStarted = false;
           memo.recordingFinished = false;
+          // memo.challengeStarted  = false;
         },
 
         init = function( thisPointer ) {
@@ -199,9 +203,15 @@
           el.$status.find('.msg').remove();
           el.$status.css('display', 'block')
             .append( '<h2 class="msg">' + str + '</h2>' )
-            .one( 'click', function() {
-              $(this).fadeOut('150');
+            .one( 'click', function() {                       // disapper on a click, or 
+              $(this).fadeOut('75');
             });
+          $('body').on( 'keyup.statusMsg', function(e) {      // catch esc key
+            if ( e.keyCode === 27 ) {
+              $('body').off( 'keyup.statusMsg' );
+              el.$status.fadeOut('75');
+            }
+          });
         },
 
 
@@ -234,7 +244,10 @@
               $(this).removeClass('shadow1');
             }
             else if ( e.type === 'click' ) {
-              fn( $(this) );           // invoke passed in handler, and pass it jquery ref to element
+              $(this).hide()                    // Turn button off & on for visual feedback.
+                .fadeIn( 175, function() { 
+                  fn( $(this) );                // invoke passed in handler, and pass it jquery ref to element
+                });
             }
           });
         },
@@ -252,13 +265,13 @@
           el.$commentEntry.val('').attr("placeholder", "");
           statusMessage( 'Snapshot done.  Click camera again to capture new snapshot.', true );
           el.$sections[3].empty().append('<p class="comment">' + me.recording[0].comment + '</p>');
-          el.$sections[0].find( '#pic1' )
-            .hide()
-            .fadeIn('250', function() {
+          // el.$sections[0].find( '#pic1' )
+          //   .hide()
+          //   .fadeIn('250', function() {
               el.$sections[1]
                 .empty()
                 .append( '<h4>FEN Notation:</h4><p class="highlight1">' + (me.newPos || me.board.fen()) + '</p>' );
-            });
+            // });
         },
 
 
@@ -282,7 +295,7 @@
                 comment: el.$commentEntry.val().trim(), 
                 delta: 'start' 
             });
-            el.$sections[1].empty().append( '<p id="movements"><span id="lastRecorded">0.<em>start</em></span></p>');
+            el.$sections[1].empty().append( '<p id="movements"><span id="lastRecorded" class="chicklet1">0.start</span></p>');
           }
 
           memo.recordingStarted = true; 
@@ -340,22 +353,24 @@
           el.$sections[0].find( '.arrow' )        // TODO: refactor. make dry, this shares a lot of code with the handler below
             .addClass( 'cursor1' )
             .on( 'click', function(e) {
-              var frame = el.$sections[1].find('.highlight1').text().trim();
+              $(this).hide().fadeIn( 150, function() { 
+                var frame = el.$sections[1].find('.highlight1').text().trim();
 
-              el.$sections[3].find('.comment').remove();
-              frame = ( frame.slice(0, frame.indexOf('.')) ) * 1;     // extract frame #, cast to number           
-              if ( $(this).context.id === 'goLeft' )  {
-                if ( frame == 0 ) { return; }
-                el.$sections[1].find('.highlight1').removeClass('highlight1').prev().addClass('highlight1');
-                frame--;
-              }
-              else {            // go Right 
-                if ( frame == me.recording.length - 1 ) { return; }
-                el.$sections[1].find('.highlight1').removeClass('highlight1').next().addClass('highlight1');
-                frame++;
-              }
-              me.board.position( me.recording[frame].pos );
-              el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );
+                el.$sections[3].find('.comment').remove();
+                frame = ( frame.slice(0, frame.indexOf('.')) ) * 1;     // extract frame #, cast to number           
+                if ( $(this).context.id === 'goLeft' )  {
+                  if ( frame == 0 ) { return; }
+                  el.$sections[1].find('.highlight1').removeClass('highlight1').prev().addClass('highlight1');
+                  frame--;
+                }
+                else {            // go Right 
+                  if ( frame == me.recording.length - 1 ) { return; }
+                  el.$sections[1].find('.highlight1').removeClass('highlight1').next().addClass('highlight1');
+                  frame++;
+                }
+                me.board.position( me.recording[frame].pos );
+                el.$sections[3].append( '<span class="comment">' + ( me.recording[frame].comment || " " ) + '</span>' );
+              });
             });
         },
 
@@ -380,29 +395,25 @@
         // To restart all over - the button on the bottom right in Author mode
         makeResetButton = function( $el ) {        
           makeButton( $el.show(), function(e) {  // reset gadget button
-              e.fadeOut(50, function() {
-                e.fadeIn(50, function() {
-                  if ( confirm('Confirm that you want to reset the widget and forget your data?') ) {
-                    console.log( '!!! Resetting Chess gadget !!!' );
-                    el.$sections[0].find( '.exercise' ).off().css( 'display', 'none' );
-                    el.$sections[0].find('#pic2').removeClass('animate1');  // in case was in the middle of recording
-                    el.$sections[1].removeClass( 'bordered' ).empty();
-                    el.$sections[3].empty();
-                    el.$commentEntry.css( 'display', 'none' );
-                    el.$status.hide();
-                    me.reset();
-                    me.firstTime = true;
-                    reset();
-                    // me.save( { exerciseType: me.exerciseType, recording: me.recording } );
-                    me.save( { exerciseType: undefined, recording: undefined } );
-                    me.board.position( 'start' );
-                    e.off();
-                    e.hide();
-                    promptForExerciseType();
-                  }
-                });
-              });
-            });
+            if ( confirm('Confirm that you want to reset the widget and forget your data?') ) {
+              console.log( '!!! Resetting Chess gadget !!!' );
+              el.$sections[0].find( '.exercise' ).off().css( 'display', 'none' );
+              el.$sections[0].find('#pic2').removeClass('animate1');  // in case was in the middle of recording
+              el.$sections[1].removeClass( 'bordered' ).empty();
+              el.$sections[3].empty();
+              el.$commentEntry.css( 'display', 'none' );
+              el.$status.hide();
+              me.reset();
+              me.firstTime = true;
+              reset();
+              // me.save( { exerciseType: me.exerciseType, recording: me.recording } );
+              me.save( { exerciseType: undefined, recording: undefined } );
+              me.board.position( 'start' );
+              e.off();
+              e.hide();
+              promptForExerciseType();
+            }
+          });
         },
 
 
@@ -410,7 +421,9 @@
         recordChallenge = function(button) {
           button.off().addClass('animate1'); 
           if (  memo.recordingFinished ) {      // A previous recording exists
-          
+            // TODO: delete recording[1] ??
+            // Other option is to also delete the starting position but that's the same as starting
+            // over and you can use the reset button for that.
           } 
           else {            // Brand new recording
             me.recording.push({                  // save current position as starting position
@@ -436,10 +449,21 @@
 
 
         stopRecordingChallenge = function() {
-          var button = el.$sections[0].find( '#pic3b' );
+          var button = el.$sections[0].find( '#pic3b' );  // the record challenge button
 
-          el.$sections[0].find( '#pic3c' ).off().fadeIn();      // show erase button
-          button.off().removeClass('animate1');
+          makeButton( el.$sections[0].find( '#pic3c' ).off().fadeIn(), function(e) {         //  erase end-state button
+            me.recording.pop();  // get rid of challenge move, now only start position is left
+            me.save( { exerciseType: me.exerciseType, recording: me.recording } );            
+            me.exerciseCreated = false;
+            me.board.position( me.recording[0].pos );
+            memo.recordingFinished = false;
+            button.addClass( 'animate1' );
+            el.$sections[1].find('.move').off();  // disable clicking on frame
+            el.$sections[1].empty()
+              .append( '<p>Starting position set.  Now move a chess piece to define challenge completion state.</p>');            
+          }); 
+
+          button.off().removeClass( 'animate1' );
 
           me.save( { exerciseType: me.exerciseType, recording: me.recording } );
           me.exerciseCreated = true;
@@ -452,6 +476,7 @@
 
           enableClickOnFrame();
         },
+
 
 
         // At startup time, display ui components based on which exercise type was chosen
@@ -484,6 +509,7 @@
 
             case 'Challenge':
               el.$sections[0].find( '.exercise3' ).css( 'display', 'inline-block' );
+              if ( me.editable) { el.$sections[1].append('<p>To create a challenge, first set the board to the start position and enter below your instructions to the learner, then hit the <em>record</em> button above to set the desired end position.</p>'); }
               el.$commentEntry.attr( 'placeholder', 'Add instructions for this challenge' );
               makeButton( el.$sections[0].find( '#pic3b' ), recordChallenge );
               break;
@@ -493,16 +519,21 @@
           }
 
           // Case where after recording, a browser refresh happened
-          if ( me.exerciseCreated === true && me.exerciseType === 'Sequence' ) { 
+          if ( me.exerciseCreated === true ) {
+            console.log('Chess gadget: Browser refresh with an exercise recorded.');            
             memo.recordingFinished = true;
-// console.log('Verify that this only comes up after recording, and browser refresh.');
-            el.$sections[1]
-              .empty()
-              .append( generateDeltaList( me.recording[ me.recording.length - 1 ].delta ) );
-            enableArrowButtons();
-            enableClickOnFrame();
-          }
 
+            if (  me.exerciseType === 'Sequence' ) {
+              el.$sections[1]
+                .empty()
+                .append( generateDeltaList( me.recording[ me.recording.length - 1 ].delta ) );
+              enableArrowButtons();
+              enableClickOnFrame();
+            }
+            else if ( me.exerciseType === 'Challenge' ) {
+              // TODO
+            }
+          }
         },
 
 
@@ -520,8 +551,13 @@
               if ( me.exerciseType === 'Snapshot' ) {
                 el.$sections[3].find('#showSnap').off().remove();
               }
-              if ( me.exerciseType === 'Sequence' ) {
+              else if ( me.exerciseType === 'Sequence' ) {
                 // TODO : nothing yet
+              }
+              else if ( me.exerciseType === 'Challenge' ) {
+                el.$auxArea.find( '.challengeAuthorOnly' ).show();
+                el.$sections[3].empty()
+                  .append( '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
               }
             }
             else {  //  exercise not yet created
@@ -547,10 +583,20 @@
                   el.$sections[3].prepend( '<p class="comment">' + me.recording[0].comment + '</p>' );
                 });
               }
-              if ( me.exerciseType === 'Sequence' ) {             // Sequence ------------------
+              else if ( me.exerciseType === 'Sequence' ) {        // Sequence ------------------
                 el.$sections[3].empty();
               }
-            }
+              else if ( me.exerciseType === 'Challenge' ) {
+                el.$auxArea.find( '.challengeAuthorOnly' ).hide();
+                el.$sections[1].append( '<p>Start position : ' + me.recording[0].pos );
+                el.$sections[3].empty()
+                  .append( '<h4>Your Challenge:</h4>'
+                  + '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
+                // TODO: put a button here to start/stop challenge  ???
+                  memo.challengeStarted = true;
+                  me.board.position( me.recording[0].pos );     // position board to 1st frame in recording 
+              }
+            } 
             else { //  Learner mode, exercise not yet created
               if ( me.exerciseType === 'Sequence' ) {
                 if ( memo.recordingStarted ) {
@@ -580,7 +626,7 @@
         // called mainly by moveEvent() but also after browser refresh prompts re-displaying recorded sequence
         generateDeltaList = function( moveDetail ) {
           var i, 
-            moves = '<p id="movements"><span id="move0" class="move chicklet1 ">0.start</span>';
+            moves = '<p id="movements" class="challengeAuthorOnly"><span id="move0" class="move chicklet1 ">0.start</span>';
 
             for ( i = 1; i < me.recording.length; i++ ) {
               moves += ( '   <span id="move' + i + '" class="move chicklet1 rounded ' );
@@ -592,7 +638,7 @@
               }
               moves += '</span>';
             }
-            moves += '</p>';
+            moves += '</p></span>';
 
             return moves;
         },
@@ -600,14 +646,14 @@
 
         // Called upon every movement of a piece on the board
         moveEvent = function( oldPos, newPos ) {
-          // For snapshots,
+          // For snapshots only
           if ( me.exerciseType === 'Snapshot' ) {
             el.$sections[3].find('.comment').remove();
             el.$sections[1].empty().append( '<h4>FEN Notation:</h4><p>' + me.newPos + '</p>' );
             return;
           }
 
-          // For sequence, during recording 
+          // For sequence, during recording ( & challenge )
           var lastDelta;
           if ( memo.recordingStarted && !memo.recordingFinished && !memo.isDeleting) {
             lastDelta = objectDelta( oldPos, newPos );
@@ -619,7 +665,7 @@
             // el.$sections[1].empty().append( generateDeltaList( lastDelta ) );
 
             if ( me.exerciseType === 'Challenge' ) {
-              el.$sections[1].empty().append( '<h4>Challenge:</h4>')
+              el.$sections[1].empty().append( '<span class="challengeAuthorOnly" <h4>Challenge:</h4></span>')
                 .append( generateDeltaList( lastDelta ) );
               stopRecordingChallenge();
             } 
@@ -629,6 +675,11 @@
           }
 
           if ( memo.isDeleting ) memo.isDeleting = false;
+
+          // For challenge (only)
+          if ( memo.challengeStarted && me.exerciseType === 'Challenge' && !me.editable ) {
+            console.log('~-~-> Challenge move caught ');
+          }
         };
 
 
