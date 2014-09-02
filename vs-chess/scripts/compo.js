@@ -644,6 +644,29 @@
         },
 
 
+        doChallenge = function( oldPos, newPos ) {
+          var t;
+console.log( ChessBoard.objToFen(newPos) );
+
+          var challenges = [
+            {
+              answers: ChessBoard.objToFen( me.recording[1].pos ),
+              scoring: 'strict'
+            }
+          ];
+
+          var challengesApi = new VersalChallengesAPI( function(response){
+            var t = ( response.scoring.totalScore || 0 );
+            console.log( "~+++++ returned from challenges api : " + t );
+          });
+console.log( 'alpha' );
+          challengesApi.setChallenges( challenges );    
+console.log( 'beta' );                
+          challengesApi.scoreChallenges( [ChessBoard.objToFen(newPos)] );
+console.log( 'cceta' );
+
+        },
+
         // Called upon every movement of a piece on the board
         moveEvent = function( oldPos, newPos ) {
           // For snapshots only
@@ -679,6 +702,7 @@
           // For challenge (only)
           if ( memo.challengeStarted && me.exerciseType === 'Challenge' && !me.editable ) {
             console.log('~-~-> Challenge move caught ');
+            doChallenge( oldPos, newPos );
           }
         };
 
