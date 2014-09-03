@@ -650,7 +650,7 @@ console.log( ChessBoard.objToFen(newPos) );
 
           var challenges = [
             {
-              answers: ChessBoard.objToFen( me.recording[1].pos ),
+              answers: me.recording[1].pos,
               scoring: 'strict'
             }
           ];
