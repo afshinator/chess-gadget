@@ -14,6 +14,9 @@
     document.addEventListener('vs-chess:change', function(data){
       this.vi.setAttributes(data.detail);
     }.bind(this));
+    // document.addEventListener('vs-chess:challenge', function(data){
+    //   console.log('OK, caught the vs-chess:challenge event.');
+    // }.bind(this));
   };
 
   Gadget.prototype.addConfigAndEditableEvents = function(){

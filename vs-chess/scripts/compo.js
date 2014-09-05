@@ -172,6 +172,7 @@
             recordingStarted : false,
             recordingFinished: false,
             challengeStarted : false,
+            challengeFinished: false,
             isDeleting : false
           },
           me = null;            // 'this' context of main object
@@ -520,7 +521,7 @@
 
           // Case where after recording, a browser refresh happened
           if ( me.exerciseCreated === true ) {
-            console.log('Chess gadget: Browser refresh with an exercise recorded.');            
+            console.log('Chess gadget: Browser refresh with an exercise recorded happened.');            
             memo.recordingFinished = true;
 
             if (  me.exerciseType === 'Sequence' ) {
@@ -540,6 +541,18 @@
         // Callback for player mode switches between Author and Learner modes,
         // gadget receives the event at startup time once as well. 
         authorLearnerToggle = function( isAuthorMode ) {
+// console.log('***** me.exerciseType ' + me.exerciseType );
+// console.log('***** me.exerciseCreated ' + me.exerciseCreated );
+// console.log('***** memo.recordingStarted ' + memo.recordingStarted);
+// console.log('***** memo.recordingFinished ' + memo.recordingFinished);
+// console.log('***** me.firstTime ' + me.firstTime );
+// console.log('***** me.editable ' + me.editable);
+
+// console.log('***** memo.challengeStarted ' + memo.challengeStarted);
+// console.log('***** memo.challengeFinished ' + memo.challengeFinished);
+
+
+
           if ( isAuthorMode ) {           // --> Author mode
             el.$auxArea.find('.author-only').css( 'visibility', 'visible' );
 
@@ -586,15 +599,16 @@
               else if ( me.exerciseType === 'Sequence' ) {        // Sequence ------------------
                 el.$sections[3].empty();
               }
-              else if ( me.exerciseType === 'Challenge' ) {
+              else if ( me.exerciseType === 'Challenge' ) {       // Challenge ------------------
                 el.$auxArea.find( '.challengeAuthorOnly' ).hide();
-                el.$sections[1].append( '<p>Start position : ' + me.recording[0].pos );
-                el.$sections[3].empty()
+                el.$sections[3].empty();
+                el.$sections[1].empty()
                   .append( '<h4>Your Challenge:</h4>'
                   + '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
-                // TODO: put a button here to start/stop challenge  ???
-                  memo.challengeStarted = true;
-                  me.board.position( me.recording[0].pos );     // position board to 1st frame in recording 
+
+                if ( ! memo.challengeStarted ) {
+                  initChallenge();
+                }
               }
             } 
             else { //  Learner mode, exercise not yet created
@@ -644,28 +658,49 @@
         },
 
 
-        doChallenge = function( oldPos, newPos ) {
-          var t;
-console.log( ChessBoard.objToFen(newPos) );
-
+        initChallenge = function() {
           var challenges = [
             {
-              answers: me.recording[1].pos,
+              answers: me.recording[1].pos,       // This contains the correct answer to the challenge
               scoring: 'strict'
             }
           ];
 
-          var challengesApi = new VersalChallengesAPI( function(response){
-            var t = ( response.scoring.totalScore || 0 );
-            console.log( "~+++++ returned from challenges api : " + t );
-          });
-console.log( 'alpha' );
-          challengesApi.setChallenges( challenges );    
-console.log( 'beta' );                
-          challengesApi.scoreChallenges( [ChessBoard.objToFen(newPos)] );
-console.log( 'cceta' );
+          memo.challengesApi = new VersalChallengesAPI( function(response){
+            var matchFound = ( response.scoring.totalScore || 0 );
 
+            if ( memo.challengeStarted && memo.challengeFinished ) {
+              if ( matchFound > 0 ) {
+                el.$sections[3].append('<p>Correct!</p>');
+                console.log('response came back SCORE! ');
+              } else {
+                el.$sections[3].append('<p>Sorry.</p>');
+                // me.player.setLearnerState( { score: 0 } );
+                console.log('response was 0');
+              }
+            }
+            // me.trigger( 'vs-chess:challenge', { position: this.newPos } ); 
+          });
+
+          memo.challengesApi.setChallenges( challenges );
+
+
+          // Initialize the UI 
+          el.$sections[1].append( '<br/><div id="start_challenge">Click to start Challenge</div>' );
+
+          makeButton( el.$sections[1].find('#start_challenge'), function(btn) {
+            btn.off().fadeOut();
+            me.board.position( me.recording[0].pos );     // position board to 1st frame in recording 
+            memo.challengeStarted = true;                    
+          });
         },
+
+
+        doChallenge = function( oldPos, newPos ) {
+          memo.challengeFinished = true;
+          memo.challengesApi.scoreChallenges( [ChessBoard.objToFen( newPos )] );
+        },
+
 
         // Called upon every movement of a piece on the board
         moveEvent = function( oldPos, newPos ) {
@@ -700,8 +735,7 @@ console.log( 'cceta' );
           if ( memo.isDeleting ) memo.isDeleting = false;
 
           // For challenge (only)
-          if ( memo.challengeStarted && me.exerciseType === 'Challenge' && !me.editable ) {
-            console.log('~-~-> Challenge move caught ');
+          if ( memo.challengeStarted && ! memo.challengeFinished && me.exerciseType === 'Challenge' && !me.editable ) {
             doChallenge( oldPos, newPos );
           }
         };
