@@ -2,8 +2,6 @@
 
 (function(){
 
-// "use strict";
-
   var _doc = (document._currentScript || document.currentScript).ownerDocument;
   var _template = _doc.querySelector('template#vs-chess-template');
 
@@ -227,7 +225,10 @@
 
           el.$sections[1].append( html );
 
-          el.$sections[1].find( 'input:radio[name="exType"]' ).change( function() {
+          var rad = el.$sections[1].find( 'input:radio[name="exType"]' );
+          // var rad = el.$sections[1].find( '#exerciseTypeChoices input' );
+
+          rad.change( function() {
             me.exerciseType = $(this).val();
             el.$sections[1].empty(); // why can't I $(this).remove() ?
             // Now we know what kind of exercise controls to display
@@ -553,14 +554,14 @@
 
 
 
-          if ( isAuthorMode ) {           // --> Author mode
+          if ( isAuthorMode ) {                // --> Author mode
             el.$auxArea.find('.author-only').css( 'visibility', 'visible' );
 
             if ( me.exerciseType === undefined ) return;
 
             el.$sections[2].css( 'display', 'block' );
 
-            if ( me.exerciseCreated ) {
+            if ( me.exerciseCreated ) {        //  --> Author mode, EXERCISE CREATED
               if ( me.exerciseType === 'Snapshot' ) {
                 el.$sections[3].find('#showSnap').off().remove();
               }
@@ -569,12 +570,16 @@
               }
               else if ( me.exerciseType === 'Challenge' ) {
                 el.$auxArea.find( '.challengeAuthorOnly' ).show();
+                el.$sections[1].find('#start_challenge').hide();
                 el.$sections[3].empty()
                   .append( '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
               }
             }
-            else {  //  exercise not yet created
+            else {                            //  --> Author mode, EXERCISE NOT YET CREATED
               el.$sections[2].css( 'display', 'block' );
+              if ( me.exerciseType === 'Challenge' ) {
+                el.$sections[1].show();
+              }
             }
           }
           else {                          // --> Learner mode
@@ -584,7 +589,7 @@
 
             el.$sections[2].css( 'display', 'none' );
 
-            if ( me.exerciseCreated ) {
+            if ( me.exerciseCreated ) {   // --> Learner mode, EXERCISE CREATED
               el.$status.hide();
               if ( me.exerciseType === 'Snapshot' ) {             // Snapshot ------------------
                 // el.$sections[3].empty().append('<p class="comment">' + me.recording[0].comment + '</p><div class="center"><img id="showSnap" src="vs-chess/img/pic4.png" height="70px" width="70px"></div>');
@@ -601,22 +606,26 @@
               }
               else if ( me.exerciseType === 'Challenge' ) {       // Challenge ------------------
                 el.$auxArea.find( '.challengeAuthorOnly' ).hide();
-                el.$sections[3].empty();
                 el.$sections[1].empty()
                   .append( '<h4>Your Challenge:</h4>'
                   + '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
+                el.$sections[3].empty();
 
-                if ( ! memo.challengeStarted ) {
+                if ( ! memo.challengeStarted && memo.challengesApi === undefined ) {
+                  console.log('running initChallenge() ');
                   initChallenge();
                 }
               }
             } 
-            else { //  Learner mode, exercise not yet created
+            else {            //  --> Learner mode, EXERCISE NOT YET CREATED
               if ( me.exerciseType === 'Sequence' ) {
                 if ( memo.recordingStarted ) {
                   stopRecording();      // pretend stop button was hit.
                   authorLearnerToggle( isAuthorMode );
                 }
+              }
+              else if ( me.exerciseType === 'Challenge' ) {
+                el.$sections[1].hide();
               }
             }
           }
@@ -690,6 +699,7 @@
 
           makeButton( el.$sections[1].find('#start_challenge'), function(btn) {
             btn.off().fadeOut();
+            el.$sections[3].append('<p>Challenge started.</p>');
             me.board.position( me.recording[0].pos );     // position board to 1st frame in recording 
             memo.challengeStarted = true;                    
           });
