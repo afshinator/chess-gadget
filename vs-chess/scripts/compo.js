@@ -11,7 +11,7 @@
   //life cycle events
   _.extend(Proto, {
     createdCallback: function(){
-      // console.log('createdCallback');
+      console.log('createdCallback');
       this.innerHTML = _template.innerHTML;
       this.$el = $(this);
       this.lazySave = _.throttle(function(){
@@ -20,6 +20,7 @@
     },
 
     attachedCallback: function(){
+console.log('attachedCallback');      
       this.toggleBoard(false);
     },
 
@@ -31,6 +32,7 @@
     },
 
     save: function(optionalObj){
+  console.log('save()');
       if(this.board) {
         if ( typeof optionalObj === "object" ) { 
           this.trigger('vs-chess:change', optionalObj );
@@ -40,14 +42,14 @@
       }
     },
 
-
+    // Called upon author/leaner change, or prop-sheet change
     toggleBoard: function(flag){
       // Handler for catching chessboard moves
       var onChange = function(oldPos, newPos) {
         this.oldPos = ChessBoard.objToFen(oldPos);
         this.newPos = ChessBoard.objToFen(newPos);
         this.ui.moveEvent(oldPos, newPos);
-// console.log("*** onChange():  editable:" + this.editable + "  Old position: " + this.oldPos +  "  New position: " + this.newPos  );
+console.log("*** toggleBoard():  editable:" + this.editable + "  Old position: " + this.oldPos +  "  New position: " + this.newPos  );
       };
 
       var cfg, 
@@ -90,14 +92,13 @@
     },
 
 
-    // Run at gadget startup, and also if browser reload happens
+    // Runs at gadget startup, and also upon browser refresh
     init: function() {
       this.ui.init( this );                               // initialize the UI component
-      
       this.reset();
 
-      // this.config contains authors persisted exercise info
-      if ( this.config.exerciseType !== undefined && this.config.exerciseType !== null ) {
+      // this.config gets set by Versal Player; it should have authors' exercise info if it was created.
+      if ( this.config.exerciseType !== undefined && this.config.exerciseType !== null ) {  // if an exercise was already created,
         this.exerciseType = this.config.exerciseType;
         this.exerciseCreated = true;
         this.recording = this.config.recording;
@@ -173,7 +174,7 @@
             challengeFinished: false,
             isDeleting : false
           },
-          me = null;            // 'this' context of main object
+          me = null,            // 'this' context of main object
 
         reset = function() {
           memo.recordingStarted = false;
@@ -224,13 +225,13 @@
             </div>';    // disabled="disabled"
 
           el.$sections[1].append( html );
+          el.$sections[4].hide();
 
           var rad = el.$sections[1].find( 'input:radio[name="exType"]' );
-          // var rad = el.$sections[1].find( '#exerciseTypeChoices input' );
 
-          rad.change( function() {
+          rad.on( 'change', function() {
             me.exerciseType = $(this).val();
-            el.$sections[1].empty(); // why can't I $(this).remove() ?
+            el.$sections[1].empty();
             // Now we know what kind of exercise controls to display
             buildDisplay();   
           });
@@ -395,26 +396,28 @@
 
 
         // To restart all over - the button on the bottom right in Author mode
-        makeResetButton = function( $el ) {        
-          makeButton( $el.show(), function(e) {  // reset gadget button
-            if ( confirm('Confirm that you want to reset the widget and forget your data?') ) {
-              console.log( '!!! Resetting Chess gadget !!!' );
-              el.$sections[0].find( '.exercise' ).off().css( 'display', 'none' );
-              el.$sections[0].find('#pic2').removeClass('animate1');  // in case was in the middle of recording
-              el.$sections[1].removeClass( 'bordered' ).empty();
-              el.$sections[3].empty();
-              el.$commentEntry.css( 'display', 'none' );
-              el.$status.hide();
-              me.reset();
-              me.firstTime = true;
-              reset();
-              // me.save( { exerciseType: me.exerciseType, recording: me.recording } );
-              me.save( { exerciseType: undefined, recording: undefined } );
-              me.board.position( 'start' );
-              e.off();
-              e.hide();
-              promptForExerciseType();
-            }
+        makeResetButton = function( $el ) {
+          $el.show( 'fast', function() {        
+            makeButton( $el, function(e) {  // reset gadget button
+              if ( confirm('Confirm that you want to reset the widget and forget your data?') ) {
+                console.log( '!!! Resetting Chess gadget !!!' );
+                el.$sections[0].find( '.exercise' ).off().css( 'display', 'none' );
+                el.$sections[0].find('#pic2').removeClass('animate1');  // in case was in the middle of recording
+                el.$sections[1].removeClass( 'bordered' ).empty();
+                el.$sections[3].empty();
+                el.$commentEntry.css( 'display', 'none' );
+                el.$status.hide();
+                me.reset();
+                me.firstTime = true;
+                reset();
+                // me.save( { exerciseType: me.exerciseType, recording: me.recording } );
+                me.save( { exerciseType: undefined, recording: undefined } );
+                me.board.position( 'start' );
+                e.off();
+                e.hide();
+                promptForExerciseType();
+              }
+            });
           });
         },
 
@@ -462,7 +465,8 @@
             button.addClass( 'animate1' );
             el.$sections[1].find('.move').off();  // disable clicking on frame
             el.$sections[1].empty()
-              .append( '<p>Starting position set.  Now move a chess piece to define challenge completion state.</p>');            
+              .append( '<p>Starting position set.  Now move a chess piece to define challenge completion state.</p>');
+            // el.$commentEntry.show();              
           }); 
 
           button.off().removeClass( 'animate1' );
@@ -481,13 +485,16 @@
 
 
 
-        // At startup time, display ui components based on which exercise type was chosen
+        // At startup time, display ui components based on which exercise type was chosen,
+        // setup appropriate buttons to handle recording exercise types.
         buildDisplay = function() {
           el.$commentEntry.css( 'display', 'block' );            // show comment entry textarea
 // console.log('***** me.exerciseType ' + me.exerciseType );
 // console.log('***** me.exerciseCreated ' + me.exerciseCreated );
 // console.log('***** memo.recordingStarted ' + memo.recordingStarted);
 // console.log('***** memo.recordingFinished ' + memo.recordingFinished);
+// console.log('***** memo.challengeStarted ' + memo.challengeStarted);
+// console.log('***** memo.challengeFinished ' + memo.challengeFinished);
 // console.log('***** me.firstTime ' + me.firstTime );
 // console.log('***** me.editable ' + me.editable);
           makeButton( el.$sections[0].find( '#pic4' ), function(){ me.board.start(true); } ); // reset all the board pieces
@@ -511,7 +518,7 @@
 
             case 'Challenge':
               el.$sections[0].find( '.exercise3' ).css( 'display', 'inline-block' );
-              if ( me.editable) { el.$sections[1].append('<p>To create a challenge, first set the board to the start position and enter below your instructions to the learner, then hit the <em>record</em> button above to set the desired end position.</p>'); }
+              if ( me.editable ) { el.$sections[1].append('<p>To create a challenge, first set the board to the start position and enter below your instructions to the learner, then hit the <em>record</em> button above to set the desired end position.</p>'); }
               el.$commentEntry.attr( 'placeholder', 'Add instructions for this challenge' );
               makeButton( el.$sections[0].find( '#pic3b' ), recordChallenge );
               break;
@@ -552,9 +559,7 @@
 // console.log('***** memo.challengeStarted ' + memo.challengeStarted);
 // console.log('***** memo.challengeFinished ' + memo.challengeFinished);
 
-
-
-          if ( isAuthorMode ) {                // --> Author mode
+          if ( isAuthorMode ) {                // ----> Author mode
             el.$auxArea.find('.author-only').css( 'visibility', 'visible' );
 
             if ( me.exerciseType === undefined ) return;
@@ -582,7 +587,7 @@
               }
             }
           }
-          else {                          // --> Learner mode
+          else {                          // ----> Learner mode
             el.$auxArea.find('.author-only').css( 'visibility', 'hidden' );
 
             if ( me.exerciseType === undefined ) return;
@@ -609,10 +614,12 @@
                 el.$sections[1].empty()
                   .append( '<h4>Your Challenge:</h4>'
                   + '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
+                me.board.position( me.recording[0].pos );     // position board to 1st frame in recording 
                 el.$sections[3].empty();
+                // el.$sections[3].empty().append("<p>Board Set to Start challenge position</p>");
 
-                if ( ! memo.challengeStarted && memo.challengesApi === undefined ) {
-                  console.log('running initChallenge() ');
+                // if ( ! memo.challengeStarted && memo.challengesApi === undefined ) {
+                if ( ! memo.challengeStarted ) {
                   initChallenge();
                 }
               }
@@ -675,34 +682,39 @@
             }
           ];
 
-          memo.challengesApi = new VersalChallengesAPI( function(response){
+          var startChallengeButton = function() {
+            makeButton( el.$sections[1].find('#start_challenge'), function(btn) {
+              btn.off().remove();
+              el.$sections[3].empty().append('<p>Challenge started.</p>');
+              me.board.position( me.recording[0].pos );     // position board to 1st frame in recording 
+              memo.challengeStarted = true;                    
+            });
+          };
+
+          memo.challengesApi = memo.challengesApi || new VersalChallengesAPI( function(response){
             var matchFound = ( response.scoring.totalScore || 0 );
 
             if ( memo.challengeStarted && memo.challengeFinished ) {
               if ( matchFound > 0 ) {
                 el.$sections[3].append('<p>Correct!</p>');
-                console.log('response came back SCORE! ');
               } else {
                 el.$sections[3].append('<p>Sorry.</p>');
                 // me.player.setLearnerState( { score: 0 } );
-                console.log('response was 0');
               }
+
+              memo.challengeStarted = false;
+              memo.challengeFinished = false;
+              el.$sections[1].append( '<div id="start_challenge">Click to redo Challenge</div>' );
+              startChallengeButton();
             }
-            // me.trigger( 'vs-chess:challenge', { position: this.newPos } ); 
+            // me.trigger( 'vs-chess:challenge', { position: this.newPos } );
           });
 
           memo.challengesApi.setChallenges( challenges );
 
-
           // Initialize the UI 
           el.$sections[1].append( '<br/><div id="start_challenge">Click to start Challenge</div>' );
-
-          makeButton( el.$sections[1].find('#start_challenge'), function(btn) {
-            btn.off().fadeOut();
-            el.$sections[3].append('<p>Challenge started.</p>');
-            me.board.position( me.recording[0].pos );     // position board to 1st frame in recording 
-            memo.challengeStarted = true;                    
-          });
+          startChallengeButton();
         },
 
 
