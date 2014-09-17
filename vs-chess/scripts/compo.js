@@ -575,7 +575,9 @@ console.log("*** toggleBoard():  editable:" + this.editable + "  Old position: "
               }
               else if ( me.exerciseType === 'Challenge' ) {
                 el.$auxArea.find( '.challengeAuthorOnly' ).show();
-                el.$sections[1].find('#start_challenge').hide();
+                // el.$sections[1].find('#start_challenge').hide();
+                el.$sections[1].empty();
+
                 el.$sections[3].empty()
                   .append( '<span class="comment">' + ( me.recording[0].comment || " " ) + '</span>' );
               }
