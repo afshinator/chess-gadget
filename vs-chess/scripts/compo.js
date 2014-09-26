@@ -261,6 +261,7 @@ console.log("*** toggleBoard():  editable:" + this.editable + "  Old position: "
           if ( me.exerciseCreated ) { // in case of a prevouisly recorded snapshot
             me.recording.pop();
           }
+          // me.newPos is in fen notation 
           me.recording.push( { pos: me.newPos || me.board.fen(), comment: el.$commentEntry.val().trim() } );
           me.save( { exerciseType: me.exerciseType, recording: me.recording } );
           me.exerciseCreated = true;
@@ -583,7 +584,7 @@ console.log("*** toggleBoard():  editable:" + this.editable + "  Old position: "
               }
             }
             else {                            //  --> Author mode, EXERCISE NOT YET CREATED
-              el.$sections[2].css( 'display', 'block' );
+              el.$sections[2].css( 'display', 'block' );      // TODO: same as line 567 ??
               if ( me.exerciseType === 'Challenge' ) {
                 el.$sections[1].show();
               }
@@ -738,7 +739,9 @@ console.log("*** toggleBoard():  editable:" + this.editable + "  Old position: "
           // For sequence, during recording ( & challenge )
           var lastDelta;
           if ( memo.recordingStarted && !memo.recordingFinished && !memo.isDeleting) {
+console.log('-->>>  newPos: ' + newPos );              
             lastDelta = objectDelta( oldPos, newPos );
+console.log('-->>>  lastDelta HERE we go: ' + lastDelta );            
             me.recording.push({ pos: me.newPos,                               // Record the movement for the sequence
                                 comment: el.$commentEntry.val(), 
                                 delta : lastDelta
