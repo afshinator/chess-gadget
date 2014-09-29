@@ -218,22 +218,25 @@ console.log("*** toggleBoard():  editable:" + this.editable + "  Old position: "
         promptForExerciseType = function() {
           var html = 
             '<div id="exerciseTypeChoices" class="author-only"> \
-              <legend>Choose exercise type to create:</legend> \
-              <input type="radio" name="exType" value="Snapshot" /> Snapshot<br/> \
-              <input type="radio" name="exType" value="Sequence" /> Sequence<br/> \
-              <input type="radio" name="exType" value="Challenge"/> Challenge<br/> \
-            </div>';    // disabled="disabled"
+              <strong>Choose an exercise to create</strong><br>\
+              <p>Create a snapshot of a position or opening<br>\
+              <div class="greyButton1 cursor1">snapshot</div></p>\
+              <p>Show and annotate a series of moves<br>\
+              <div class="greyButton1 cursor1">sequence</div></p>\
+              <p>Challenge your learners with a chess problem<br>\
+              <div class="greyButton1 cursor1">challenge</div></p>\
+            </div>';
 
           el.$sections[1].append( html );
           el.$sections[4].hide();
 
-          var rad = el.$sections[1].find( 'input:radio[name="exType"]' );
+          var $exType = el.$sections[1].find( '.greyButton1' );
 
-          rad.on( 'change', function() {
-            me.exerciseType = $(this).val();
+          makeButton( $exType, function(e) {
+            me.exerciseType = e.text().charAt(0).toUpperCase() + e.text().slice(1);
+            console.log('++++++++++++ ' + me.exerciseType );
             el.$sections[1].empty();
-            // Now we know what kind of exercise controls to display
-            buildDisplay();   
+            buildDisplay();
           });
         },
 

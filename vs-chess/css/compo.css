@@ -34,7 +34,7 @@ div {
       top: 0px;
       right: 0;
       /* border: 1px dotted rgba(0, 0, 255, .1); */
-      width: 50%;
+      width: 52%;
       height: 100%;
       font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
       font-size: 15px; 
@@ -96,13 +96,9 @@ div {
 
 /* Section 1  - 
 */
-    #exerciseTypeChoices {
-   /*    display: none;  */
-    }
-
     #section1 {
       min-height: 100px;
-      padding: 5px;
+      /* padding: 5px;  */
     }
 
 
@@ -120,8 +116,33 @@ div {
       height: 40px;
       width: 75%;
       background: rgb(240, 217, 181);
-
     }
+
+    #exerciseTypeChoices strong {
+      font-size: 18px;
+      color: #7c7975;
+      margin-bottom: 20px;
+    }
+
+    #exerciseTypeChoices p {
+      font-size: 14px;
+      color: #7c7975;
+      margin-top: 30px;
+    }  
+
+    .greyButton1 {
+      width: 355px;
+      background: #7c7975;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      padding: 9px 0;
+
+      -webkit-border-radius: 3px 3px 3px 3px;
+      border-radius: 3px 3px 3px 3px;      
+    }
+
+
 
 /* Section 2  -  
 */

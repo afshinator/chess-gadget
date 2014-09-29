@@ -8,6 +8,32 @@
  * Date: 10 Aug 2013
  */
 
+ /* Modifications for Versal Chess Gadget
+  * by Afshin Mokhtari;  Sept 2014
+  */
+
+@font-face{ 
+  font-family:'AvenirNextLTPro-Regular';
+  font-weight:bold;
+  src:url("../../font/275EBE_0_0.eot");
+  src:url("../../font/275EBE_0_0.eot?#iefix") format('embedded-opentype'),url("../../font/275EBE_0_0.woff") format('woff'),url("../../font/275EBE_0_0.ttf") format('truetype')
+}
+
+@font-face{ 
+  font-family:'AvenirNextLTPro-Regular';
+  font-weight:normal;
+  src:url("../../font/275EBE_1_0.eot");
+  src:url("../../font/275EBE_1_0.eot?#iefix") format('embedded-opentype'),url("../../font/275EBE_1_0.woff") format('woff'),url("../../font/275EBE_1_0.ttf") format('truetype')
+}
+
+
+/* line 8692 from ...Versal/sdk/blob/master/html/player/styles/player-bundle.css
+@font-face{font-family:'AvenirNextLTPro-Regular';font-weight:bold;src:url("../assets/font/275EBE_0_0.eot");src:url("../assets/font/275EBE_0_0.eot?#iefix") format('embedded-opentype'),url("../assets/font/275EBE_0_0.woff") format('woff'),url("../assets/font/275EBE_0_0.ttf") format('truetype')}
+@font-face{font-family:'AvenirNextLTPro-Regular';font-weight:normal;src:url("../assets/font/275EBE_1_0.eot");src:url("../assets/font/275EBE_1_0.eot?#iefix") format('embedded-opentype'),url("../assets/font/275EBE_1_0.woff") format('woff'),url("../assets/font/275EBE_1_0.ttf") format('truetype')}
+*/
+
+
+
 /* clearfix */
 .clearfix-7da63 {
   clear: both;
@@ -15,7 +41,7 @@
 
 /* board */
 .board-b72b1 {
-  border: 2px solid #404040;
+  /* original: border: 2px solid #404040; */
   -moz-box-sizing: content-box;
   box-sizing: content-box;
 }
@@ -36,27 +62,34 @@
 
 /* white square */
 .white-1e1d7 {
-  background-color: #f0d9b5;
-  color: #b58863;
+  background-color: #f8f7f1;         /* original #f0d9b5; */
+  color: #3a968a;                    /* original #b58863;  */
 }
 
 /* black square */
 .black-3c85d {
-  background-color: #b58863;
-  color: #f0d9b5;
+  background-color: #b9d7cf;        /* original #b58863; */
+  color: #3a968a;                   /* original #f0d9b5; */
 }
 
 /* highlighted square */
 .highlight1-32417, .highlight2-9c5d2 {
+  background-color: #efd785;
+/* original 
   -webkit-box-shadow: inset 0 0 3px 3px yellow;
   -moz-box-shadow: inset 0 0 3px 3px yellow;
   box-shadow: inset 0 0 3px 3px yellow;
+  */
 }
+
+
 
 /* notation */
 .notation-322f9 {
   cursor: default;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "AvenirNextLTPro-Regular", Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  /* original : font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; */
   font-size: 14px;
   position: absolute;
 }
