@@ -1,6 +1,18 @@
 (function(){
   /* global _, $, VersalPlayerAPI */
 
+
+  var propSheetControls = {
+      showNotation: {
+        title: 'Show board coordinates',
+        type: 'Checkbox'
+      },
+      flipped: {
+        title: 'Flip black/white orientation',
+        type: 'Checkbox'
+      }
+    };
+
   var Gadget = function() {
     this.vi = new VersalPlayerAPI();
     this.addChildrenEvents();
@@ -14,9 +26,11 @@
     document.addEventListener('vs-chess:change', function(data){
       this.vi.setAttributes(data.detail);
     }.bind(this));
-    // document.addEventListener('vs-chess:challenge', function(data){
-    //   console.log('OK, caught the vs-chess:challenge event.');
-    // }.bind(this));
+
+    document.addEventListener('vs-chess:addToPropSheet', function( obj ){
+      _.extend( obj, propSheetControls );    
+      this.vi.setPropertySheetAttributes( obj );
+    }.bind(this));
   };
 
   Gadget.prototype.addConfigAndEditableEvents = function(){
@@ -31,26 +45,9 @@
   };
 
   Gadget.prototype.setHeightAndPropertySheet = function() {
-    this.vi.setHeight(400);
+    this.vi.setHeight(470);
 
-    this.vi.setPropertySheetAttributes({
-      showNotation: {
-        title: 'Show board coordinates',
-        type: 'Checkbox'
-      },
-      sparePieces: {
-        title: 'Show & allow spares',
-        type: 'Checkbox',
-      },
-      flipped: {
-        title: 'Flip black/white orientation',
-        type: 'Checkbox'
-      },
-      dropOffBoard: {
-        title: 'Drag piece off board to remove',
-        type: 'Checkbox'
-      }
-    });
+    this.vi.setPropertySheetAttributes( propSheetControls );
   };
 
   window.addEventListener('WebComponentsReady', function() {

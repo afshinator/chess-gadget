@@ -1,16 +1,14 @@
 {
   "username": "versal",
   "name": "chess",
-  "version": "0.0.54",
+  "version": "0.0.7",
   "title": "Chess",
   "description": "Chess",
   "author": "Versal",
   "launcher": "iframe",
   "defaultConfig": {
     "showNotation" : false,
-    "sparePieces" : true,
-    "flipped" : false,
-    "dropOffBoard" : false
+    "flipped" : false
   },
   "defaultUserState": {}
 }

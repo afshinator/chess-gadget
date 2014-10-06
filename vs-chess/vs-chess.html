@@ -1,49 +1,24 @@
 <element name="vs-chess">
-  <link rel="stylesheet" href="chessboardjs/css/chessboard-0.3.0.css">
-  <link rel="stylesheet" href="css/compo.css">
+   <link rel="stylesheet" href="chessboardjs/css/chessboard-0.3.0.css">
+   <link rel="stylesheet" href="css/compo.css">
 
-  <template id="vs-chess-template">
-    <div id="board1"></div>   <!-- The chessboard -->
+   <template id="vs-chess-template">
+      <div id="titleArea">
+         <span id="titleText"></span>
+         <span id="resetBtn" class="author-only"><!-- Reset gadget button -->
+            <a>reset</a>
+         </span>
+      </div> 
 
-    <div id="auxArea">        <!-- Auxillary controls & display area for exercises, ... -->
-      <div id="section0" class="section">
-        <div id="pic1" class="pic exercise exercise1 author-only" title="Take Snapshot"><img src="vs-chess/img/pic1.jpg"></div>
-        <div id="pic2" class="pic exercise exercise2 author-only" title="Record a Sequence"><img src="vs-chess/img/pic2.png"></div>
-        <div id="pic3" class="pic exercise exercise2 author-only" title="Delete last frame"><img src="vs-chess/img/pic3.jpg"></div>
+      <div id="board1"></div>    <!-- The chessboard -->
 
-        <div id="pic3b" class="pic exercise exercise3 author-only" title="Record Challenge"><img src="vs-chess/img/pic3b.jpg"></div>
-        <div id="pic3c" class="pic exercise exercise3 author-only" title="Re-do end Position"><img src="vs-chess/img/pic3c.jpg"></div>
+      <div id="mainControls"></div>    <!-- Auxillary controls & display area for exercises & challenge -->
+   </template>
 
-        <div id="pic4" class="pic exercise exercise1 exercise2 exercise3 author-only" title="Reset board"><img src="vs-chess/img/pic4.png"></div>
-        <div id="pic5" class="pic exercise exercise1 exercise2 exercise3 author-only"  title="Clear Board"><img src="vs-chess/img/pic5.jpg"></div>
-        <div class="rightButtons">
-          <div id="goLeft" class="pic exercise exercise2 faded1 arrow"><img src="vs-chess/img/left.jpg"></div>
-          <div id="goRight" class="pic exercise exercise2 faded1 arrow"><img src="vs-chess/img/right.jpg"></div>
-        </div>
-      </div>
-      <div id="section1" class="section">
-            <!-- Exercise type options radio buttons will go here -->
-      </div>
-      <div id="section2" class="section">
-        <textarea id="commentEntry" class="exercise exercise1 " name="textarea" placeholder="Add optional comment for this configuration"></textarea>
-      </div>
-      <div id="section3" class="section">
+   <script type="text/javascript" src="../jquery/dist/jquery.js"></script>
+   <script type="text/javascript" src="../underscore/underscore.js"></script>
+   <script type="text/javascript" src="../versal-shared-modules/vs.basecompmethods/vs.basecompmethods.js"></script>
 
-      </div>
-      <div id="section4"  class="section author-only">          <!-- Reset gadget button -->
-        <img src="vs-chess/img/restart.png" width="16" height="16" title="Double-click to Discard & Restart">
-      </div>
-    </div>
-
-    <div id="statusMsg" class="rounded shadow2 gradient1">    <!-- Status messages -->
-      <div id="dismiss"><small>Click anywhere or ESC to dismiss</small></div>
-    </div>      
-  </template>
-
-  <script type="text/javascript" src="../jquery/dist/jquery.js"></script>
-  <script type="text/javascript" src="../underscore/underscore.js"></script>
-  <script type="text/javascript" src="../versal-shared-modules/vs.basecompmethods/vs.basecompmethods.js"></script>
-
-  <script src="chessboardjs/js/chessboard-0.3.0.js"></script>
-  <script src="scripts/compo.js"></script>
+   <script src="chessboardjs/js/chessboard-0.3.0.js"></script>
+   <script src="scripts/compo.js"></script>
 </element>
