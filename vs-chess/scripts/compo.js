@@ -339,20 +339,51 @@
 
             // Reset gadget for author to state before choosing which exercise type to create
             makeResetButton = function( $el ) {
+               $el.off();     // Make sure to take off all handlers from before
                makeButton( $el, function(e) {
-                  if ( confirm('Confirm that you want to reset the widget and forget your data?') ) {
-                     console.log( '!!! Resetting Chess gadget !!!' );
-                     $el.off();
-                     $commentEntry.remove();
-                     _section1.$el.empty();
-                     _section2.$el.empty();
-                     _section3.$el.empty();
-                     reset();
-                     me.reset();
-                     me.persistToVSPlayer( { exerciseType: undefined, recording: undefined } );
-                     me.board.resetToStart();
-                     setTitle( '' );
-                     promptForExerciseType();
+                  statusMessage( 'Are you sure you want to reset the gadget ?', 
+                     function() {
+                        $(this).fadeOut( '75' );
+                        $statusModal.empty();
+                        $statusModal.css( 'display', 'none' );
+                        console.log( '!!! Resetting Chess gadget !!!' );
+                        $commentEntry.remove();
+                        _section1.$el.empty();
+                        _section2.$el.empty();
+                        _section3.$el.empty();
+                        reset();
+                        me.reset();
+                        me.persistToVSPlayer( { exerciseType: undefined, recording: undefined } );
+                        me.board.resetToStart();
+                        setTitle( '' );
+                        promptForExerciseType();
+                     }
+                  );
+               });
+            },
+
+
+
+            statusMessage = function( str, fn ) {
+               var cancel = function() {
+                  $statusModal.empty();
+                  $statusModal.css( 'display', 'none' );
+                  $('body').off( 'keyup.statusMsg' );
+               };
+               
+               $statusModal.css( 'display', 'block' )
+                  .append( '<p class="msg">' + str + '</p>' )
+                  .append( '<div class="centered" style="width: 225px">\
+                     <div id="no" class="buttonType1" style="display: inline-block">no</div>\
+                     <div id="yes" class="buttonType1 spacing1" style="display:inline-block">yes</div></div>' );
+
+               makeFancyButton( $statusModal.find( '#no' ), cancel );
+               makeFancyButton( $statusModal.find( '#yes' ), fn, '#3a968a' );
+
+               $('body').on( 'keyup.statusMsg', function(e) {      // catch esc key
+                  if ( e.keyCode === 27 ) {
+                     $('body').off( 'keyup.statusMsg' );
+                     cancel();
                   }
                });
             },
@@ -408,33 +439,38 @@
 
                         if ( isAuthorMode ) {
                            learnerControls.hide();
+                           _section3.$el.find( '.comment' ).remove();
                         } 
                         else {                                       // --==> Challenge Created, LEARNER mode
-                           markup = '<div id="learnerControls"> \
-                                 <div id="retry" class="buttonType1 spacing1">retry challenge</div>\
-                                 <div id="resetCh" class="buttonType1 spacing1">reset</div>\
-                              </div>';
-
                            if ( ! me.state.challengeStarted ) {
                               initChallenge();
                            }
 
+                           me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording 
+
+                           markup = '<div id="learnerControls"> \
+                                 <div id="try" class="buttonType1 spacing1">try challenge</div>\
+                              </div>';
+                                 // <div id="resetCh" class="buttonType1 spacing1">reset</div>\
+
+                                 
                            if ( learnerControls.length === 0 ) {
                               _section1.$el.append( markup );
-                              makeFancyButton( _section1.$el.find( '#retry' ), function( btn ) {
-                                 btn.off().remove();
-                                 _section2.$el.empty().append('<p>Challenge started.</p>');
-                                 me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording 
+                              makeFancyButton( _section1.$el.find( '#try' ), function( btn ) {
+                                 me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording                                  
+                                 btn.off().text( 'waiting for your move...' ).css( 'background', '#ddd' );
+                                 _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
                                  me.state.challengeStarted = true;  
                               }, '#3a968a', '170px' );
-                              makeFancyButton( _section1.$el.find( '#resetCh' ), function() {
-                                 // TODO:
-                              }, '#7c7975', '170px' );
+                              // makeFancyButton( _section1.$el.find( '#resetCh' ), function() {
+                              //    // TODO:
+                              // }, '#7c7975', '170px' );
                            } else {
                               learnerControls.show();
                            }
 
-                           _section2.$el.empty().append( me.state.recording[0].comment );
+                           _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
+                           $notationDisplay.empty().append( '<span id="move0" class="move chicklet1 ">0.start</span>' );                           
                            _section3.$el.find( '.comment' ).remove();
                         }
 
@@ -703,7 +739,7 @@
                me.persistToVSPlayer( { exerciseType: me.state.exerciseType, recording: me.state.recording } );
                me.state.exerciseCreated = true;
                me.state.recordingFinished = true;  
-               statusMessage( "Recording sequence done. Click recorder button again to add or delete frames.", true ); 
+               // statusMessage( "Recording sequence done. Click recorder button again to add or delete frames.", true ); 
 
                // Show the 'play' button if its not already showing
                readyToPlaySequence();
@@ -816,17 +852,24 @@
 
                   if ( me.state.challengeStarted && me.state.challengeFinished ) {
                      if ( matchFound > 0 ) {
-                        _section3.$el.append('<p>Correct!</p>');
+                        _section3.$el.append('<p class="comment">Correct!</p>');
                      } else {
-                        _section3.$el.append('<p>Sorry.</p>');
+                        _section3.$el.append('<p class="comment">Sorry.</p>');
                         // me.player.setLearnerState( { score: 0 } );
                      }
 
                      me.state.challengeStarted = false;
                      me.state.challengeFinished = false;
-                     _section2.$el.empty().append( '<div id="start_challenge">Click to redo Challenge</div>' );
+
+                     _section1.$el.find( '#try' ).text( 'retry challenge' ).css( 'background', '#3a968a' );
+                     makeFancyButton( _section1.$el.find( '#try' ), function( btn ) {
+                        me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording                                  
+                        btn.off().text( 'waiting for your move...' ).css( 'background', '#ddd' );
+                        _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
+                        _section3.$el.find( '.comment' ).remove();
+                        me.state.challengeStarted = true;  
+                     }, '#3a968a', '170px' );
                   }
-                  // me.trigger( 'vs-chess:challenge', { position: this.newPos } );
                });
 
                me.state.challengesApi.setChallenges( challenges );
@@ -947,22 +990,8 @@
             },
 
 
-            statusMessage = function( str, bCenter ) {
-               $statusModal.find( '.msg' ).remove();
-               $statusModal.css( 'display', 'block' )
-                  .append( '<h2 class="msg">' + str + '</h2>' )
-                  .one( 'click', function() {
-                     $(this).fadeOut('75');
-                  });
-               $('body').on( 'keyup.statusMsg', function(e) {      // catch esc key
-                  if ( e.keyCode === 27 ) {
-                     $('body').off( 'keyup.statusMsg' );
-                     $statusModal.fadeOut('75');
-                  }
-               });
-            },
-            
 
+            
             // Return key/val in b thats not in a
             objectDiff = function ( a, b ) {
                var result = {};
@@ -1044,10 +1073,12 @@
 
                if ( me.state.isDeleting ) me.state.isDeleting = false;
 
-               // For challenge (only)
+               // For challenge (only) in learner mode
                if ( me.state.challengeStarted && ! me.state.challengeFinished && me.state.exerciseType === 'Challenge' && !me.editable ) {
                   me.state.challengeFinished = true;
-                  me.state.challengesApi.scoreChallenges( [ChessBoard.objToFen( newPos )] );
+                  lastDiff = objectDiff( oldPos, newPos );
+                  $notationDisplay.empty().append( generateDiffList( lastDiff ) );
+                  me.state.challengesApi.scoreChallenges( [ newPos ] ); 
                }               
             },
 
