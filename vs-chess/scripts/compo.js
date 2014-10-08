@@ -299,7 +299,7 @@
 
                _section1.html( markup );
                $buttons = _section1.$el.find( '.exerciseChoice' );
-
+               setTitle( 'Chess' );
                makeFancyButton( $buttons, function(e) {
                   me.state.exerciseType = e.text().charAt(0).toUpperCase() + e.text().slice(1);
                   _section1.$el.empty();
@@ -426,9 +426,11 @@
 
                      case 'Sequence' :
                         if ( isAuthorMode ) {                        // --==> Sequence Created, AUTHOR mode
-                           // _section1.$el.find( '#record' ).show();         // TODO: not doing what I intend!
+                           _section1.$el.find( '#topRow' ).css( 'display', 'inline-block' );
+                           _section1.$el.find( '#record' ).show();
                         }
                         else {                                       // --==> Sequence Created, LEARNER mode
+                           _section1.$el.find( '#record' ).hide(); 
                            readyToPlaySequence();
                            // _section1.$el.find( '#record' ).off();
                         }
@@ -453,7 +455,7 @@
                               </div>';
                                  // <div id="resetCh" class="buttonType1 spacing1">reset</div>\
 
-                                 
+
                            if ( learnerControls.length === 0 ) {
                               _section1.$el.append( markup );
                               makeFancyButton( _section1.$el.find( '#try' ), function( btn ) {
@@ -524,15 +526,15 @@
                   case 'Snapshot':
                      markup = '<div id="" class="author-only"> \
                         <div id="capture" class="buttonType1">capture</div>\
-                        <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
+                        <div id="reset" class="buttonType1 fontSize13 spacing2">reset pieces</div>\
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
 
                      _section1.html( markup );                     // Section 1 holds the buttons
                      _section1.$el.css( 'height', '34px' );
-                     makeFancyButton( _section1.$el.find( '#capture' ), recordSnapshot, '#3a968a', '150px' );
-                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); } );
-                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); } );
+                     makeFancyButton( _section1.$el.find( '#capture' ), recordSnapshot, '#3a968a', '172px' );
+                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
+                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px'  );
 
                      markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" placeholder="Write a note or description about this position"></textarea>';
                      _section2.html( markup );                    // Section 2 holds the comment entry area
@@ -720,6 +722,8 @@
                   }
                });
 
+
+               _section1.$el.find( '#play' ).hide();
                // Handler for next click to stop the recording
                button.one( 'click', stopRecording );
             },
@@ -731,6 +735,7 @@
 
                button.removeClass('animate1');           // Stop the recording-in-progress animation
 
+               _section1.$el.find( '#play' ).show();
                _section2.$el.find( '#eraseButton' ).off().fadeOut();      // turn off erase button
 
                $commentEntry.remove();          // with a recording finished, we no longer need the textarea
@@ -757,11 +762,12 @@
                var topRow = _section1.$el.find('#topRow');
 
                if ( _section1.$el.find( '#play').length !== 0 ) {  // if there IS an existing play button
-                  topRow.removeClass( 'author-only' ); // take out author-only class
+                  return;
                }
                else {      // we have to create play button
                   _section1.$el.prepend( '<div id="play" class="buttonType1">play</div>' );
                   _section1.$el.find( '#play').css( 'margin-right', '15px' );
+
 
                   // enable the Play sequence button
                   makeFancyButton( _section1.$el.find( '#play' ), function() {

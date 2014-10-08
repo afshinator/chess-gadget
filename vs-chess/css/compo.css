@@ -27,7 +27,7 @@
       margin-left: 10px;
       position: absolute;
       top: 40px;
-      width: 336px;    
+      width: 343px;  /* at 343, the board will be 336px, with each sqaure 42px */  
    }
 
 
@@ -88,7 +88,7 @@
       top: 0px;
       right: 0;
       /* border: 1px dotted rgba(0, 0, 255, .1); */
-      width: 52%;
+      width: 51%;
       height: 100%;
       font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
       font-size: 15px; 
@@ -150,7 +150,7 @@
 
 
    #exerciseTypeChoices {
-      padding-left: 8px;
+      padding-left: 4px;
    }
 
    #exerciseTypeChoices strong {
@@ -188,6 +188,8 @@
    #commentEntry {
       height: 100%;
       border: 1px solid #ddd; /* f0d9b5; */
+      font-size: 14px;
+      color: #7c7975;
    }
 
 
@@ -239,6 +241,8 @@
    #notationDisplay {
       height: 100%;
       overflow: auto;   /* Enable scrollbars for longer lists */
+      font-size: 14px;
+      color: #7c7975;  /*  Notes and FEN notation - Avenir Next, 14pt, #7c7975 */
    }
 
    #notationDisplay p {
@@ -251,6 +255,11 @@
 
 /*  Misc --
  */
+
+
+   .comments {
+      font-size: 14px;
+   }
 
    .centered {
       margin: 0 auto;
@@ -285,19 +294,23 @@
       margin-left: 10px;
    }
 
+   .spacing3 {
+      margin-left: 15px;
+   }
+
    .highlight1 {        /* for the sequence diff list */
-      background: #f2f1ed;
+      background: #f2f1ed;  /* FEN notation highlight color  #f2f1ed; */
    }
 
    .highlight2 {
-      color: #3a968a; /* red :  #ce3e30;   */
+      color: #3a968a; /* our green;   red :  #ce3e30;   */
    }
 
 
 
    .chicklet1 {         /* for sequence move list */
      padding: 2px;
-     font-size:16px;
+     font-size:14px;
      background: #eee;
    }
 

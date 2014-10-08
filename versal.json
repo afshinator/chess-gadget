@@ -1,10 +1,10 @@
 {
   "username": "versal",
   "name": "chess",
-  "version": "0.0.72",
+  "version": "0.0.73",
   "title": "Chess",
   "description": "Chess",
-  "author": "Versal",
+  "author": "Afshin Mokhtari",
   "launcher": "iframe",
   "defaultConfig": {
     "showNotation" : false,
