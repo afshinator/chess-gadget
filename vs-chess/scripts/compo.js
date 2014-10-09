@@ -321,10 +321,10 @@
                // $el.css( 'height', '30px' );
                $el.on('mouseover mouseout click', function(e) {
                   if ( e.type === 'mouseover' ) {
-                     $(this).addClass('buttonOver1');
+                     // $(this).addClass('buttonOver1');
                   } 
                   else if ( e.type === 'mouseout' ) {
-                     $(this).removeClass('buttonOver1');
+                     // $(this).removeClass('buttonOver1');
                   }
                   else if ( e.type === 'click' ) {
                      $(this).removeClass('buttonOver1')
@@ -391,7 +391,8 @@
 
             // Called everytime user switches between Author and Learner modes in Versal player.
             toggleAuthorLearner = function ( isAuthorMode ) {
-               var markup;
+               var markup,
+                  fn;
                // First turn on or off all elements that are author-mode specific
                // $mainControls.find('.author-only').css( 'visibility', ( isAuthorMode ? 'visible' : 'hidden' )  );
 
@@ -412,13 +413,18 @@
                            _section2.$el.find( '.comment' ).remove();
                         }
                         else {                                       // --==> SNAPSHOT Created, LEARNER mode
+                           fn = function() {
+                              me.board.setPosition( me.state.recording[0].pos );
+                              _section2.$el.find( '.comment' ).remove();
+                              _section2.$el.append( '<span class="comment">' + me.state.recording[0].comment + '</span>' );
+                              $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
+                           };
                            markup = '<div id="showSnapshot" class="buttonType1">jump to snapshot</div>';
                            _section1.$el.append( markup );
                            
+                           fn();
                            makeFancyButton( _section1.$el.find( '#showSnapshot' ), function() {
-                              me.board.setPosition( me.state.recording[0].pos );
-                              _section2.$el.append( '<span class="comment">' + me.state.recording[0].comment + '</span>' );
-                              $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
+                              fn();
                            }, '#3a968a', '150px' );
 
                         }
@@ -668,7 +674,7 @@
             // Callback for Sequence Record on/off button, EXERCISE 2
             recordSequence = function( button ) {
                // turn off catching button press for now, and add class to show user recording started
-               button.off().addClass('animate1');
+               button.off(); // .addClass('animate1');
 
                // If a previous recording exists, we want to add to it
                if ( me.state.recordingFinished ) {
@@ -698,8 +704,8 @@
                me.state.recordingStarted = true;
                me.state.recordingFinished = false;
 
-               displayOff( _section1.$el.find( '#reset' ).off() );   // hide reset button
-               displayOff( _section1.$el.find( '#clear' ).off() );   // hide clear button
+               displayOff( _section1.$el.find( '#reset' ) );   // hide reset button
+               displayOff( _section1.$el.find( '#clear' ) );   // hide clear button
 
                $commentEntry.attr( 'placeholder', 'Recording started, enter optional note for step 1' );  
                $commentEntry.val('');                  // empty out to enable next comment
@@ -733,7 +739,7 @@
             stopRecording = function() {   
                var button = _section1.$el.find( '#record' );   // the start/stop recording button
 
-               button.removeClass('animate1');           // Stop the recording-in-progress animation
+               // button.removeClass('animate1');           // Stop the recording-in-progress animation
 
                _section1.$el.find( '#play' ).show();
                _section2.$el.find( '#eraseButton' ).off().fadeOut();      // turn off erase button
@@ -750,6 +756,8 @@
                readyToPlaySequence();
 
                makeButton( button, recordSequence );    // setup to enable restarting recording
+               _section1.$el.find( '#reset' ).css( 'display', 'inline-block' );
+               _section1.$el.find( '#clear' ).css( 'display', 'inline-block' );
 
                enableArrowButtons();
                enableClickOnFrame();
@@ -785,12 +793,19 @@
                            timeoutID = window.setTimeout( loopAndPause, 1000 );
                         } else {
                            enableClickOnFrame();
-                           enableArrowButtons();                      
+                           enableArrowButtons();
+                           _section1.$el.find( '#record' ).show();      // TODO: might have wrap this in a check for editable == true
+                           _section1.$el.find( '#reset' ).show();                    
+                           _section1.$el.find( '#clear' ).show();                                              
                         }
                      };
 
                      _section2.$el.find( '.move' ).off();     // turn off clicking on frames during playback
                      _section2.$el.find( '.lilArrow').off();   // turn off arrow buttons for now too
+
+                     _section1.$el.find( '#record' ).hide();
+                     _section1.$el.find( '#reset' ).hide();                    
+                     _section1.$el.find( '#clear' ).hide();
 
                      loopAndPause();
                   }, '#3a968a', '81px' ); 
@@ -1015,10 +1030,10 @@
             // called mainly by handleChessPieceMoveEvent() but also after browser refresh prompts re-displaying recorded sequence.
             generateDiffList = function( moveDetail ) {
                var i, 
-               moves = '<p id="movements" class="challengeAuthorOnly"><span id="move0" class="move chicklet1 ">0.start</span>';
+               moves = '<p id="movements" class="challengeAuthorOnly"><span id="move0" class="move chicklet1 rounded">0.start</span>';
 
                for ( i = 1; i < me.state.recording.length; i++ ) {
-                  moves += ( '   <span id="move' + i + '" class="move chicklet1 spacing2 rounded ' );
+                  moves += ( '   <span id="move' + i + '" class="move chicklet1 rounded ' );
                   if ( me.state.exerciseType === 'Challenge' ) moves += 'chicklet2 ';    // class for Challenge
                   if ( i === me.state.recording.length - 1 ) {
                      moves += ( 'highlight2">    ' + i + '.' + moveDetail );
@@ -1026,6 +1041,7 @@
                      moves += ( '">    ' + i + '.' + me.state.recording[i].delta );
                   }
                   moves += '</span>';
+                  if ( ( (i+1) % 5 === 0) ) moves += '<br>';
                }
                moves += '</p></span>';
 

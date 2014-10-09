@@ -105,8 +105,8 @@
       padding: 9px 0;
       margin-top: 12px;
 
-      -webkit-border-radius: 3px 3px 3px 3px;
-      border-radius: 3px 3px 3px 3px;
+      -webkit-border-radius: 2px 2px 2px 2px;
+      border-radius: 2px 2px 2px 2px;
 
       -webkit-touch-callout: none;
       -webkit-user-select: none;
@@ -130,10 +130,10 @@
 
 
    .spacing1 {                
-      margin-left: 5px;         /* breathing room for horizontal button row */
+      margin-left: 5px;        
    }
 
-
+   .move { margin-right: 5px; }  /* breathing room for horizontal button row */
 
 
 /* section 1
@@ -187,11 +187,14 @@
 
    #commentEntry {
       height: 100%;
-      border: 1px solid #ddd; /* f0d9b5; */
+      border: 1px solid #7c7975; 
       font-size: 14px;
       color: #7c7975;
    }
 
+   textarea:focus {
+      outline: none;
+   }
 
 
    .lilButton {         /* The small picture buttons in sequence recording; left, right, & erase */
@@ -250,6 +253,9 @@
      padding: 2px;
    }
 
+   #movements {
+      line-height: 1.5em;
+   }
 
 
 
@@ -257,7 +263,7 @@
  */
 
 
-   .comments {
+   .comment {
       font-size: 14px;
    }
 
