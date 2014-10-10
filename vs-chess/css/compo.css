@@ -116,6 +116,10 @@
       user-select: none;
    }
 
+   .smallerPadding {
+      padding: 8px 0;
+   }
+
 
    .fontSize13 {
       font-size: 13px;
@@ -130,7 +134,7 @@
 
 
    .spacing1 {                
-      margin-left: 5px;        
+      margin-left: 6px;        
    }
 
    .move { margin-right: 5px; }  /* breathing room for horizontal button row */
@@ -187,13 +191,14 @@
 
    #commentEntry {
       height: 100%;
-      border: 1px solid #7c7975; 
+      border: 1px solid #c7c3be; 
       font-size: 14px;
       color: #7c7975;
    }
 
    textarea:focus {
       outline: none;
+      border: 1px solid #7c7975;       
    }
 
 
@@ -318,6 +323,7 @@
      padding: 2px;
      font-size:14px;
      background: #eee;
+     line-height: 1.5em;
    }
 
 
@@ -329,6 +335,22 @@
    .cursor1 {           /* for sequence list  */
       cursor: pointer;
    }
+
+
+   .challengeResult {
+      font-size: 20px;
+      font-weight: bolder;
+      text-align: center;      
+   }
+
+   .correct {
+      color: #3a968a;
+   }
+
+   .incorrect {
+      color: #ce3e30;
+   }
+
 
    .nonSelectable {
       -webkit-touch-callout: none;

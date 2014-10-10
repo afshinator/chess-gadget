@@ -142,6 +142,8 @@
                if ( me === null ) {
                   me = thisPointer;                      
                }
+               // TODO: handler for non-html 5 browsers to catch maxlength of textarea
+               // http://stackoverflow.com/questions/4459610/set-maxlength-in-html-textarea  
             },
 
          // Called upon author/leaner change, or prop-sheet change
@@ -448,6 +450,7 @@
                         if ( isAuthorMode ) {
                            learnerControls.hide();
                            _section3.$el.find( '.comment' ).remove();
+                           _section3.$el.find( '#challengeBox' ).text( 'Challenge Solution' ); 
                         } 
                         else {                                       // --==> Challenge Created, LEARNER mode
                            if ( ! me.state.challengeStarted ) {
@@ -457,7 +460,7 @@
                            me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording 
 
                            markup = '<div id="learnerControls"> \
-                                 <div id="try" class="buttonType1 spacing1">try challenge</div>\
+                                 <div id="try" class="buttonType1 spacing1 smallerPadding">try challenge</div>\
                               </div>';
                                  // <div id="resetCh" class="buttonType1 spacing1">reset</div>\
 
@@ -465,9 +468,10 @@
                            if ( learnerControls.length === 0 ) {
                               _section1.$el.append( markup );
                               makeFancyButton( _section1.$el.find( '#try' ), function( btn ) {
-                                 me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording                                  
+                                 me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording
                                  btn.off().text( 'waiting for your move...' ).css( 'background', '#ddd' );
                                  _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
+                                 _section3.$el.find( '#challengeBox' ).text( 'Your move' );     // instead of "Challenge Solution"
                                  me.state.challengeStarted = true;  
                               }, '#3a968a', '170px' );
                               // makeFancyButton( _section1.$el.find( '#resetCh' ), function() {
@@ -478,7 +482,8 @@
                            }
 
                            _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
-                           $notationDisplay.empty().append( '<span id="move0" class="move chicklet1 ">0.start</span>' );                           
+                           _section3.$el.find( '#challengeBox' ).text( '' );     // instead of "Challenge Solution"
+                           $notationDisplay.empty().append( '<span id="move0" class="move chicklet1 rounded ">0.start</span>' );                           
                            _section3.$el.find( '.comment' ).remove();
                         }
 
@@ -531,7 +536,7 @@
                switch ( me.state.exerciseType ) {
                   case 'Snapshot':
                      markup = '<div id="" class="author-only"> \
-                        <div id="capture" class="buttonType1">capture</div>\
+                        <div id="capture" class="buttonType1 smallerPadding">capture</div>\
                         <div id="reset" class="buttonType1 fontSize13 spacing2">reset pieces</div>\
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
@@ -540,9 +545,9 @@
                      _section1.$el.css( 'height', '34px' );
                      makeFancyButton( _section1.$el.find( '#capture' ), recordSnapshot, '#3a968a', '172px' );
                      makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
-                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px'  );
+                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
 
-                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" placeholder="Write a note or description about this position"></textarea>';
+                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Write a note or description about this position"></textarea>';
                      _section2.html( markup );                    // Section 2 holds the comment entry area
                      _section2.$el.css( 'height', '105px' );
 
@@ -554,7 +559,7 @@
 
                   case 'Sequence':
                      markup = '<div id="topRow" class="author-only"> \
-                        <div id="record" class="buttonType1 ">record</div>\
+                        <div id="record" class="buttonType1 smallerPadding">record</div>\
                         <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
@@ -565,8 +570,8 @@
 
                      // makeFancyButton( _section1.$el.find( '#play' ), function(){}, '#3a968a', '81px' );
                      makeFancyButton( _section1.$el.find( '#record' ), recordSequence, '#ce3e30', '81px' );                     
-                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '84px'  );
-                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '84px'  );
+                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px'  );
+                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
 
                      markup = '<p class="faded1">Algebraic notation</p>\
                         <div class="lilControl flushRight">\
@@ -579,7 +584,7 @@
                      _section2.$el.find( '.lilButton' ).hide(); // Erase enabled during recording; left/right enabled after recording
                      _section2.$el.css( 'height', '105px' );
 
-                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" placeholder="Set board to start position, enter optional comment for start position here"></textarea>';
+                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Set board to start position, enter optional comment for start position here"></textarea>';
                      _section3.html( markup );
                      _section3.$el.css( 'height', '105px' );
                      
@@ -591,24 +596,24 @@
 
                   case 'Challenge':                         // TODO: make dry; this is almost same code as snapshot
                      markup = '<div class="author-only"> \
-                        <div id="set" class="buttonType1">set challenge</div>\
-                        <div id="reset" class="buttonType1 spacing1">reset pieces</div>\
-                        <div id="clear" class="buttonType1 spacing1">clear board</div>\
+                        <div id="set" class="buttonType1 smallerPadding">set challenge</div>\
+                        <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
+                        <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
 
                      _section1.html( markup );                     // Section 1 holds the buttons
                      _section1.$el.css( 'height', '34px' );
                      makeFancyButton( _section1.$el.find( '#set' ), recordChallenge, '#3a968a', '150px' );
-                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); } );
-                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); } );
+                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
+                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
 
-                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set your initial position on the board, then click set challenge"></textarea>';
+                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set your initial position on the board, then click set challenge"></textarea>';
                      _section2.html( markup );                    // Section 2 holds the comment entry area
                      _section2.$el.css( 'height', '105px' );
 
-                     markup = '<div class="author-only"><span class="faded1">Challenge Solution</span><br><div id="notationDisplay" class="textbox bordered"></div></div>';
+                     markup = '<div class="author-only"><span id="challengeBox" class="faded1">Challenge Solution</span><br><div id="notationDisplay" class="textbox bordered"></div></div>';
                      _section3.html( markup );
-                     _section3.$el.find( '#notationDisplay' ).css( 'height', '45px' );
+                     _section3.$el.find( '#notationDisplay' ).css( 'height', '30px' );
 
                     break;
 
@@ -685,7 +690,7 @@
                   $notationDisplay.find('.move').last().addClass('highlight2');
 
                   // restore the textarea that was removed when recording was stopped.
-                  var markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" placeholder="Set board to start position and enter comment for it here"></textarea>';
+                  var markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Set board to start position and enter comment for it here"></textarea>';
                   _section3.html( markup );
                   _section3.$el.css( 'height', '105px' );
                   $commentEntry = _section3.$el.find( '#commentEntry' );
@@ -698,7 +703,7 @@
                      comment: $commentEntry.val().trim(), 
                      delta: 'start' 
                   });
-                  $notationDisplay.append( '<p id="movements"><span id="lastRecorded" class="chicklet1 highlight2">0.start</span></p>' );
+                  $notationDisplay.append( '<p id="movements"><span id="lastRecorded" class="chicklet1 highlight2 rounded">0.start</span></p>' );
                }
 
                me.state.recordingStarted = true;
@@ -707,7 +712,7 @@
                displayOff( _section1.$el.find( '#reset' ) );   // hide reset button
                displayOff( _section1.$el.find( '#clear' ) );   // hide clear button
 
-               $commentEntry.attr( 'placeholder', 'Recording started, enter optional note for step 1' );  
+               $commentEntry.attr( 'placeholder', 'Recording started, enter optional note for step ' + me.state.recording.length );  
                $commentEntry.val('');                  // empty out to enable next comment
 
                _section2.$el.find( '#eraseButton' ).off().fadeIn();  // show erase button
@@ -773,8 +778,8 @@
                   return;
                }
                else {      // we have to create play button
-                  _section1.$el.prepend( '<div id="play" class="buttonType1">play</div>' );
-                  _section1.$el.find( '#play').css( 'margin-right', '15px' );
+                  _section1.$el.prepend( '<div id="play" class="buttonType1 smallerPadding">play</div>' );
+                  _section1.$el.find( '#play').css( 'margin-right', '10px' );
 
 
                   // enable the Play sequence button
@@ -873,9 +878,9 @@
 
                   if ( me.state.challengeStarted && me.state.challengeFinished ) {
                      if ( matchFound > 0 ) {
-                        _section3.$el.append('<p class="comment">Correct!</p>');
+                        _section3.$el.append('<p class="comment challengeResult correct">Correct!</p>');
                      } else {
-                        _section3.$el.append('<p class="comment">Sorry.</p>');
+                        _section3.$el.append('<p class="comment challengeResult incorrect">Incorrect</p>');
                         // me.player.setLearnerState( { score: 0 } );
                      }
 
@@ -888,6 +893,7 @@
                         btn.off().text( 'waiting for your move...' ).css( 'background', '#ddd' );
                         _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
                         _section3.$el.find( '.comment' ).remove();
+                        $notationDisplay.empty().append( '<span id="move0" class="move chicklet1 rounded ">0.start</span>' );
                         me.state.challengeStarted = true;  
                      }, '#3a968a', '170px' );
                   }
@@ -928,18 +934,18 @@
                makeFancyButton( _section1.$el.find( '#cancel' ), function() {
                   // TODO: all this code is a straight copy from buildDisplay()
                   var markup = '<div class="author-only"> \
-                     <div id="set" class="buttonType1">set challenge</div>\
-                     <div id="reset" class="buttonType1 spacing1">reset pieces</div>\
-                     <div id="clear" class="buttonType1 spacing1">clear board</div>\
+                     <div id="set" class="buttonType1 smallerPadding">set challenge</div>\
+                     <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
+                     <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                   </div>';
 
                   _section1.html( markup );                  
                   _section1.$el.css( 'height', '34px' );
                   makeFancyButton( _section1.$el.find( '#set' ), recordChallenge, '#3a968a', '150px' );
-                  makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); } );
-                  makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); } );
+                  makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
+                  makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
 
-                  markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set initial position on board, then click set challenge button"></textarea>';
+                  markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set initial position on board, then click set challenge button"></textarea>';
                   _section2.html( markup );
                   _section2.$el.css( 'height', '105px' );
                   $commentEntry = $('#commentEntry');
@@ -956,16 +962,16 @@
                $commentEntry.remove();          
                _section3.$el.append( '<span class="comment">' + ( me.state.recording[ me.state.recording.length - 1 ].comment || " " )  + '</span>');  // put comment from last frame in new comment area
 
-               $notationDisplay.append( '<span id="move0" class="move chicklet1 ">0.start</span>' );
+               $notationDisplay.append( '<span id="move0" class="move chicklet1 rounded ">0.start</span>' );
             },
 
 
             // After a challenge recording is started, a chess-piece move triggers a call to this method.
             stopRecordingChallenge = function() {
                var markup = '<div class="author-only"> \
-                  <div id="set" class="buttonType1">reset challenge</div>\
-                  <div id="reset" class="buttonType1 spacing1">reset pieces</div>\
-                  <div id="clear" class="buttonType1 spacing1">clear board</div>\
+                  <div id="set" class="buttonType1 smallerPadding">reset challenge</div>\
+                  <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
+                  <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                </div>';
 
                // makeButton(   ).off().fadeIn(), function(e) {         //  erase end-state button
@@ -999,8 +1005,8 @@
                   $notationDisplay.empty();
                   recordChallenge();
                }, '#3a968a', '150px' );
-               makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); } );
-               makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); } );
+               makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
+               makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
 
                _section2.$el.empty().append( '<p>Challenge defined.</p>');
 
@@ -1030,7 +1036,7 @@
             // called mainly by handleChessPieceMoveEvent() but also after browser refresh prompts re-displaying recorded sequence.
             generateDiffList = function( moveDetail ) {
                var i, 
-               moves = '<p id="movements" class="challengeAuthorOnly"><span id="move0" class="move chicklet1 rounded">0.start</span>';
+               moves = '<p id="movements" class="challengeAuthorOnly"><span id="move0" class="move chicklet1 rounded ">0.start</span>';
 
                for ( i = 1; i < me.state.recording.length; i++ ) {
                   moves += ( '   <span id="move' + i + '" class="move chicklet1 rounded ' );
