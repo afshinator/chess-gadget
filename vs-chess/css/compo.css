@@ -31,7 +31,7 @@
    }
 
 
-
+/* The modal that pops up when reset-gadget button/link is pressed */
    #statusModal {
       display: none;
       background-color: rgb(248, 247, 241);
@@ -50,6 +50,13 @@
       text-align: center;
    }
 
+   #resetBtn {                /* The reset 'button' is text */
+      padding-left:15px;
+      font-size: 14px;
+      color: #7c7975;
+      text-decoration: underline;
+      cursor: pointer;
+   }
 
 
 
@@ -61,7 +68,9 @@
       font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;          
    }
 
-   #titleText {               /* The exercise title will go in here */
+
+/* The exercise/app title will go in here */
+   #titleText {               
       width: 150px;
    }
 
@@ -70,13 +79,7 @@
       font-weight: bolder;
    }
 
-   #resetBtn {                /* The reset 'button' is text */
-      padding-left:15px;
-      font-size: 14px;
-      color: #7c7975;
-      text-decoration: underline;
-      cursor: pointer;
-   }
+
 
 
 
@@ -86,9 +89,10 @@
    #mainControls {
       position: absolute;
       top: 0px;
-      right: 0;
+      right: 10px;
       /* border: 1px dotted rgba(0, 0, 255, .1); */
-      width: 51%;
+      /* width: 51%;  */
+      width: 355px;
       height: 100%;
       font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
       font-size: 15px; 
@@ -97,6 +101,7 @@
 
 
 
+/* main type of buttons used all over */
    .buttonType1 {
       text-align: center;
       font-size: 14px;
@@ -116,6 +121,32 @@
       user-select: none;
    }
 
+   .color-grey {
+      background: #7c7975;
+   }
+
+   .color-grey:hover {
+      background: #6f6c69;
+   }
+
+
+   .color-green {
+      background: #3A968A;
+   }
+
+   .color-green:hover {
+      background: #35887D;
+   }
+
+   .color-red {
+      background: #CE3E30;
+   }
+
+   .color-red:hover {
+      background: #BE392C;
+   }
+
+
    .smallerPadding {
       padding: 8px 0;
    }
@@ -125,6 +156,7 @@
       font-size: 13px;
    }
 
+
 /* Section 0 will be a fixed height and contain nothing - 
  */
 
@@ -133,11 +165,6 @@
    }
 
 
-   .spacing1 {                
-      margin-left: 6px;        
-   }
-
-   .move { margin-right: 5px; }  /* breathing room for horizontal button row */
 
 
 /* section 1
@@ -189,11 +216,25 @@
       font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;      
    }
 
+
+  /* Using this for textarea instead of .textbox, because I discovered same width 
+      on both a div and textarea gives them actually different sizes! 
+   */
+   .textbox2 {   
+      width: 350px;
+      font-family: AvenirNextLTPro-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;      
+   }
+
+
    #commentEntry {
       height: 100%;
       border: 1px solid #c7c3be; 
       font-size: 14px;
       color: #7c7975;
+   }
+
+   textarea {
+      resize: none;
    }
 
    textarea:focus {
@@ -212,7 +253,7 @@
    .lilControl {        /* Encloses the lilButtons in sequence recording above */
       display: inline-block;
       position: absolute; 
-      right: 15px;
+      right: 0px;
       top: 145px;
    }
 
@@ -267,6 +308,10 @@
 /*  Misc --
  */
 
+   ::selection {        /* TODO: doesnt work in firefox */ 
+       background: #f2f1ed;      /* Text selection highlight color */
+   } 
+
 
    .comment {
       font-size: 14px;
@@ -301,6 +346,12 @@
      border-radius: 8px 8px 8px 8px; 
    }
 
+
+   .spacing1 {                
+      margin-left: 7px;        
+   }
+
+
    .spacing2 {                   /* The 'Algebraic notation' list in $notationDisplay; mainly for sequence */
       margin-left: 10px;
    }
@@ -309,8 +360,10 @@
       margin-left: 15px;
    }
 
-   .highlight1 {        /* for the sequence diff list */
-      background: #f2f1ed;  /* FEN notation highlight color  #f2f1ed; */
+
+
+   .highlight1 {        /* for the sequence diff list, TODO: color of FEN snapshot state */
+      background: #fdfcf8;  
    }
 
    .highlight2 {
@@ -318,6 +371,8 @@
    }
 
 
+
+   .move { margin-right: 5px; }  /* breathing room for horizontal button row */
 
    .chicklet1 {         /* for sequence move list */
      padding: 2px;
@@ -330,6 +385,7 @@
    .chicklet2 {         /* for challenge */
      padding: 4px;
    }
+
 
 
    .cursor1 {           /* for sequence list  */

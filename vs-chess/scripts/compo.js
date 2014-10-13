@@ -14,11 +14,13 @@
   /* life cycle events
    */
   _.extend(Proto, {
-      /* -- state saved on this object :
-         editable          -  Set by vs player; true : author mode,  false : learner mode
-         config            -  Set by vs player; the persisted gadget data
+      /* State saved on this object :
+         General Versal gadget stuff:
+            this.editable  -  Set by vs-player; true : author mode,  false : learner mode
+            this.config    -  Set by vs-player; the persisted gadget data
 
-         this.state created hold the rest of the widget state, see reset().
+         State specific to this Chess Gadget:
+            this.state     - All sorts of good stuff to enable this gadgets functionality, see reset().
       */
 
       init: function() {
@@ -142,8 +144,6 @@
                if ( me === null ) {
                   me = thisPointer;                      
                }
-               // TODO: handler for non-html 5 browsers to catch maxlength of textarea
-               // http://stackoverflow.com/questions/4459610/set-maxlength-in-html-textarea  
             },
 
          // Called upon author/leaner change, or prop-sheet change
@@ -212,29 +212,36 @@
       /* The View holds 
        */
       view: function() {
-         var me = null,
-            $mainControls,
-            $titleText,
-            $resetBtn,
-            $statusModal,
-            $commentEntry,
-            $notationDisplay;
+         var me = null,          // Access to all objects that were added onto variable Proto via _.extend()
+                                 // Cached access to DOM elements:
+            $mainControls,       //    Auxillary controls & display area for exercises & challenge 
+            $titleText,          //    Where the title of the gadget gets displayed, set to either 'Chess', 'Snapshot', 'Sequence', or 'Challenge'
+            $resetBtn,           //    The reset gadget button that is displayed to the author once an exercise type is chosen
+            $statusModal,        //    The pop-up modal thrown up when reset button is pressed
+            $commentEntry,       //    Where author enters comments/notes for frames in snpashot/sequence/challenge
+            $notationDisplay;    //    Where gadget displays FEN notation or last moved recorded; both authors & leaners
 
+
+         /* The $mainControls sits to the right of the chessboard and wraps basically all the controls except for reset-button.
+            It has 4 vertically stacked container divs: _section0 to _section3;
+          */
          var section = function( which ) {
                var obj = {};
 
                $mainControls.append( '<div id="section' + which + '" class="section"></div>' ); // inject into DOM
 
                obj.$el = $( '#section' + which );               
-               obj.display = function( markup ) { obj.$el.empty().append( markup ); };
+               // obj.display = function( markup ) { obj.$el.empty().append( markup ); };
                obj.html = function( markup ) { obj.$el.html( markup ); };
 
                return obj;
             },
-            _section0,
-            _section1,
-            _section2,
-            _section3;
+            _section0,           // Just for vertical spacing from top
+            _section1,           // Holds different buttons based on exercise type author chose
+            _section2,           // Either note/comment entry area or where move notation is displayed.
+            _section3;           // same as _section2
+
+
 
          var init = function ( thisPointer ) {
                if ( me === null ) { 
@@ -251,12 +258,14 @@
                _section2 = section( 2 );
                _section3 = section( 3 );
 
-               reset();             
+               reset();
+               // TODO: handler for non-html 5 browsers to catch maxlength of textarea
+               // http://stackoverflow.com/questions/4459610/set-maxlength-in-html-textarea                     
             },
 
-            displayOff = function( el ) { el.css( 'display', 'none' ); },
+            // displayOff = function( el ) { el.css( 'display', 'none' ); },
 
-            displayOn = function( el, inlineBlock ) { el.css( 'display', inlineBlock ? 'inline-block' : 'block' ); },
+            // displayOn = function( el, inlineBlock ) { el.css( 'display', inlineBlock ? 'inline-block' : 'block' ); },
 
             setTitle = function( str ) { $titleText.html( '<span class="title">' + str + '</span>'  ); },
 
@@ -287,8 +296,7 @@
             /* Prompt exercise & challenge creation options for author;
              */
             promptForExerciseType = function() {
-               var $buttons,
-                  markup = 
+               var markup = 
                   '<div id="exerciseTypeChoices" class="author-only"> \
                      <strong>Choose an exercise to create</strong><br>\
                      <p>Create a snapshot of a position or opening<br>\
@@ -299,21 +307,26 @@
                      <div class="buttonType1 exerciseChoice">challenge</div></p>\
                   </div>';
 
-               _section1.html( markup );
-               $buttons = _section1.$el.find( '.exerciseChoice' );
                setTitle( 'Chess' );
-               makeFancyButton( $buttons, function(e) {
+
+               _section1.html( markup );
+
+               makeStdButton( _section1.$el.find( '.exerciseChoice' ), function(e) {
                   me.state.exerciseType = e.text().charAt(0).toUpperCase() + e.text().slice(1);
                   _section1.$el.empty();
                   $resetBtn.show();
                   buildDisplay( me.state.exerciseType );
-               }, "#7c7975", '355px');
+               }, 'color-grey', '355px');
             },
 
 
+            makeStdButton = function( $el, fn, colorClass, width ) {
+               $el.css( 'width', width );
+               makeButton( $el, fn );
+               $el.addClass( colorClass );
+            },
+
             makeFancyButton = function( $el, fn, color, width ) {
-               color = color || "#7c7975"; 
-               width = width || "100px";
                $el.css( 'background', color ).css( 'width', width );
                makeButton( $el, fn );
             },
@@ -329,7 +342,7 @@
                      // $(this).removeClass('buttonOver1');
                   }
                   else if ( e.type === 'click' ) {
-                     $(this).removeClass('buttonOver1')
+                     $(this) // .removeClass('buttonOver1')
                         .hide()                    // Turn button off & on for visual feedback.
                         .fadeIn( 175, function() { 
                            fn( $(this) );          // invoke passed in handler, and pass it jquery ref to element
@@ -379,8 +392,8 @@
                      <div id="no" class="buttonType1" style="display: inline-block">no</div>\
                      <div id="yes" class="buttonType1 spacing1" style="display:inline-block">yes</div></div>' );
 
-               makeFancyButton( $statusModal.find( '#no' ), cancel );
-               makeFancyButton( $statusModal.find( '#yes' ), fn, '#3a968a' );
+               makeStdButton( $statusModal.find( '#no' ), cancel, 'color-grey', '100px' );
+               makeStdButton( $statusModal.find( '#yes' ), fn, 'color-green', '100px' );
 
                $('body').on( 'keyup.statusMsg', function(e) {      // catch esc key
                   if ( e.keyCode === 27 ) {
@@ -421,14 +434,13 @@
                               _section2.$el.append( '<span class="comment">' + me.state.recording[0].comment + '</span>' );
                               $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
                            };
-                           markup = '<div id="showSnapshot" class="buttonType1">jump to snapshot</div>';
+                           markup = '<div id="showSnapshot" class="buttonType1 smallerPadding">jump to snapshot</div>';
                            _section1.$el.append( markup );
                            
-                           fn();
-                           makeFancyButton( _section1.$el.find( '#showSnapshot' ), function() {
-                              fn();
-                           }, '#3a968a', '150px' );
+                           fn();    // jump to snapshot by default on going to learner mode
 
+                           // 'jump to snapshot' button
+                           makeStdButton( _section1.$el.find( '#showSnapshot' ), function() { fn(); }, 'color-green', '172px' );
                         }
                         break;
 
@@ -462,28 +474,25 @@
                            markup = '<div id="learnerControls"> \
                                  <div id="try" class="buttonType1 spacing1 smallerPadding">try challenge</div>\
                               </div>';
-                                 // <div id="resetCh" class="buttonType1 spacing1">reset</div>\
-
 
                            if ( learnerControls.length === 0 ) {
                               _section1.$el.append( markup );
-                              makeFancyButton( _section1.$el.find( '#try' ), function( btn ) {
+
+                              makeStdButton( _section1.$el.find( '#try' ), function( btn ) {
                                  me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording
-                                 btn.off().text( 'waiting for your move...' ).css( 'background', '#ddd' );
+                                 btn.off().text( 'waiting for your move...' );
                                  _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
                                  _section3.$el.find( '#challengeBox' ).text( 'Your move' );     // instead of "Challenge Solution"
                                  me.state.challengeStarted = true;  
-                              }, '#3a968a', '170px' );
-                              // makeFancyButton( _section1.$el.find( '#resetCh' ), function() {
-                              //    // TODO:
-                              // }, '#7c7975', '170px' );
+                              }, 'color-green', '170px' );
+
                            } else {
                               learnerControls.show();
                            }
 
                            _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
                            _section3.$el.find( '#challengeBox' ).text( '' );     // instead of "Challenge Solution"
-                           $notationDisplay.empty().append( '<span id="move0" class="move chicklet1 rounded ">0.start</span>' );                           
+                           $notationDisplay.empty().append( '<p id="movements"><span id="move0" class="move chicklet1 rounded ">0.start</span></p>' );                           
                            _section3.$el.find( '.comment' ).remove();
                         }
 
@@ -537,17 +546,17 @@
                   case 'Snapshot':
                      markup = '<div id="" class="author-only"> \
                         <div id="capture" class="buttonType1 smallerPadding">capture</div>\
-                        <div id="reset" class="buttonType1 fontSize13 spacing2">reset pieces</div>\
+                        <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
 
                      _section1.html( markup );                     // Section 1 holds the buttons
                      _section1.$el.css( 'height', '34px' );
-                     makeFancyButton( _section1.$el.find( '#capture' ), recordSnapshot, '#3a968a', '172px' );
-                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
-                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
+                     makeStdButton( _section1.$el.find( '#capture' ), recordSnapshot, 'color-green', '171px' );     // TODO: should be 172 per spec but tweaked to make things line up
+                     makeStdButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, 'color-grey', '81px' );
+                     makeStdButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, 'color-grey', '81px' );
 
-                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Write a note or description about this position"></textarea>';
+                     markup = '<textarea id="commentEntry" class="textbox2 author-only" name="textarea" maxlength="310" placeholder="Write a note or description about this position"></textarea>';
                      _section2.html( markup );                    // Section 2 holds the comment entry area
                      _section2.$el.css( 'height', '105px' );
 
@@ -563,28 +572,26 @@
                         <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
-                     // <div id="play" class="buttonType1">play</div>\
 
                      _section1.html( markup );                     // Section 1 holds the buttons
                      _section1.$el.css( 'height', '34px' );
 
-                     // makeFancyButton( _section1.$el.find( '#play' ), function(){}, '#3a968a', '81px' );
-                     makeFancyButton( _section1.$el.find( '#record' ), recordSequence, '#ce3e30', '81px' );                     
-                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px'  );
-                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
+                     makeStdButton( _section1.$el.find( '#record' ), recordSequence, 'color-red', '81px' );                     
+                     makeStdButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, 'color-grey', '81px'  );
+                     makeStdButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, 'color-grey', '81px' );
 
                      markup = '<p class="faded1">Algebraic notation</p>\
                         <div class="lilControl flushRight">\
-                           <div id="leftButton" class="lilButton leftButton lilArrow"></div>\
-                           <div id="rightButton" class="lilButton rightButton lilArrow"></div>\
-                           <div id="eraseButton" class="lilButton eraseButton"></div>\
+                           <div id="leftButton" class="lilButton leftButton lilArrow" title="go to previous frame"></div>\
+                           <div id="rightButton" class="lilButton rightButton lilArrow" title="go to next frame"></div>\
+                           <div id="eraseButton" class="lilButton eraseButton" title="erase last recorded frame"></div>\
                         </div>\
                         <div id="notationDisplay" class="textbox bordered"></div>';
                      _section2.html( markup );
                      _section2.$el.find( '.lilButton' ).hide(); // Erase enabled during recording; left/right enabled after recording
                      _section2.$el.css( 'height', '105px' );
 
-                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Set board to start position, enter optional comment for start position here"></textarea>';
+                     markup = '<textarea id="commentEntry" class="textbox2 author-only" name="textarea" maxlength="310" placeholder="Set board to start position, enter optional comment for start position here"></textarea>';
                      _section3.html( markup );
                      _section3.$el.css( 'height', '105px' );
                      
@@ -603,11 +610,11 @@
 
                      _section1.html( markup );                     // Section 1 holds the buttons
                      _section1.$el.css( 'height', '34px' );
-                     makeFancyButton( _section1.$el.find( '#set' ), recordChallenge, '#3a968a', '150px' );
-                     makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
-                     makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
+                     makeStdButton( _section1.$el.find( '#set' ), recordChallenge, 'color-green', '171px' );
+                     makeStdButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, 'color-grey', '81px' );
+                     makeStdButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, 'color-grey', '81px' );
 
-                     markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set your initial position on the board, then click set challenge"></textarea>';
+                     markup = '<textarea id="commentEntry" class="textbox2 author-only" name="textarea" maxlength="310" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set your initial position on the board, then click set challenge"></textarea>';
                      _section2.html( markup );                    // Section 2 holds the comment entry area
                      _section2.$el.css( 'height', '105px' );
 
@@ -680,6 +687,7 @@
             recordSequence = function( button ) {
                // turn off catching button press for now, and add class to show user recording started
                button.off(); // .addClass('animate1');
+               button.text( 'stop' );
 
                // If a previous recording exists, we want to add to it
                if ( me.state.recordingFinished ) {
@@ -709,13 +717,13 @@
                me.state.recordingStarted = true;
                me.state.recordingFinished = false;
 
-               displayOff( _section1.$el.find( '#reset' ) );   // hide reset button
-               displayOff( _section1.$el.find( '#clear' ) );   // hide clear button
+               _section1.$el.find( '#reset' ).hide();
+               _section1.$el.find( '#clear' ).hide();
 
                $commentEntry.attr( 'placeholder', 'Recording started, enter optional note for step ' + me.state.recording.length );  
                $commentEntry.val('');                  // empty out to enable next comment
 
-               _section2.$el.find( '#eraseButton' ).off().fadeIn();  // show erase button
+               _section2.$el.find( '#eraseButton' ).off().fadeIn();  // show erase button; TODO: should probably only show after at least 1 frame besides start is recorded.
 
                // Handler for erase button, only active during recording
                makeButton( _section2.$el.find( '#eraseButton' ), function() {
@@ -745,6 +753,7 @@
                var button = _section1.$el.find( '#record' );   // the start/stop recording button
 
                // button.removeClass('animate1');           // Stop the recording-in-progress animation
+               button.text( 'record' );
 
                _section1.$el.find( '#play' ).show();
                _section2.$el.find( '#eraseButton' ).off().fadeOut();      // turn off erase button
@@ -761,8 +770,9 @@
                readyToPlaySequence();
 
                makeButton( button, recordSequence );    // setup to enable restarting recording
-               _section1.$el.find( '#reset' ).css( 'display', 'inline-block' );
-               _section1.$el.find( '#clear' ).css( 'display', 'inline-block' );
+
+               _section1.$el.find( '#reset' ).show();
+               _section1.$el.find( '#clear' ).show();
 
                enableArrowButtons();
                enableClickOnFrame();
@@ -772,48 +782,52 @@
             // call this after stopping recording to create the play button,  
             // call it again in learner mode to make it displayable in learner mode (!)
             readyToPlaySequence = function( delay ) {
-               var topRow = _section1.$el.find('#topRow');
+               var topRow = _section1.$el.find('#topRow'),
+                  $thePlayButton,
+                  setupPlayButton = function() {
+                     makeStdButton( $thePlayButton, function() {  // enable the Play sequence button
+                        var i = 0,
+                        timeoutID,        // TODO: have to deal with author/learner switch during playback... make this global?
+                        loopAndPause = function() {
+                           var elt;
+                           _section2.$el.find( '.move' ).removeClass( 'highlight2' );        // clear highlights
+                           _section2.$el.find( '#move' + i ).addClass( 'highlight2' );       // target current one in loop
+                           me.board.setPosition( me.state.recording[i].pos );                // take board to that position
+                           _section3.$el.empty().append( '<span class="comment">' + ( me.state.recording[i].comment || " " ) + '</span>' );
+                           if ( timeoutID ) window.clearTimeout( timeoutID );             // pause, then advance to next one
+                           if ( i < ( me.state.recording.length - 1 ) ) {
+                              i++;
+                              timeoutID = window.setTimeout( loopAndPause, 1000 );
+                           } else {
+                              enableClickOnFrame();
+                              enableArrowButtons();
+                              _section1.$el.find( '#record' ).show();      // TODO: might have wrap this in a check for editable == true
+                              _section1.$el.find( '#reset' ).show();                    
+                              _section1.$el.find( '#clear' ).show();
+                              setupPlayButton();
+                           }
+                        };
 
-               if ( _section1.$el.find( '#play').length !== 0 ) {  // if there IS an existing play button
+                        $thePlayButton.off();
+                        _section2.$el.find( '.move' ).off();     // turn off clicking on frames during playback
+                        _section2.$el.find( '.lilArrow').off();   // turn off arrow buttons for now too
+
+                        _section1.$el.find( '#record' ).hide();
+                        _section1.$el.find( '#reset' ).hide();                    
+                        _section1.$el.find( '#clear' ).hide();
+
+                        loopAndPause();
+                     }, 'color-green', '81px' ); 
+                  };
+
+               if ( _section1.$el.find( '#play' ).length !== 0 ) {  // if there IS an existing play button
                   return;
                }
                else {      // we have to create play button
                   _section1.$el.prepend( '<div id="play" class="buttonType1 smallerPadding">play</div>' );
-                  _section1.$el.find( '#play').css( 'margin-right', '10px' );
-
-
-                  // enable the Play sequence button
-                  makeFancyButton( _section1.$el.find( '#play' ), function() {
-                     var i = 0,
-                     timeoutID,        // TODO: have to deal with author/learner switch during playback... make this global?
-                     loopAndPause = function() {
-                        var elt;
-                        _section2.$el.find( '.move' ).removeClass( 'highlight2' );        // clear highlights
-                        _section2.$el.find( '#move' + i ).addClass( 'highlight2' );       // target current one in loop
-                        me.board.setPosition( me.state.recording[i].pos );                // take board to that position
-                        _section3.$el.empty().append( '<span class="comment">' + ( me.state.recording[i].comment || " " ) + '</span>' );
-                        if ( timeoutID ) window.clearTimeout( timeoutID );             // pause, then advance to next one
-                        if ( i < ( me.state.recording.length - 1 ) ) {
-                           i++;
-                           timeoutID = window.setTimeout( loopAndPause, 1000 );
-                        } else {
-                           enableClickOnFrame();
-                           enableArrowButtons();
-                           _section1.$el.find( '#record' ).show();      // TODO: might have wrap this in a check for editable == true
-                           _section1.$el.find( '#reset' ).show();                    
-                           _section1.$el.find( '#clear' ).show();                                              
-                        }
-                     };
-
-                     _section2.$el.find( '.move' ).off();     // turn off clicking on frames during playback
-                     _section2.$el.find( '.lilArrow').off();   // turn off arrow buttons for now too
-
-                     _section1.$el.find( '#record' ).hide();
-                     _section1.$el.find( '#reset' ).hide();                    
-                     _section1.$el.find( '#clear' ).hide();
-
-                     loopAndPause();
-                  }, '#3a968a', '81px' ); 
+                  _section1.$el.find( '#play').css( 'margin-right', '9px' );  // TODO: 10px makes things go over!
+                  $thePlayButton = _section1.$el.find( '#play' );
+                  setupPlayButton();
                }
             },
 
@@ -887,15 +901,15 @@
                      me.state.challengeStarted = false;
                      me.state.challengeFinished = false;
 
-                     _section1.$el.find( '#try' ).text( 'retry challenge' ).css( 'background', '#3a968a' );
-                     makeFancyButton( _section1.$el.find( '#try' ), function( btn ) {
+                     _section1.$el.find( '#try' ).text( 'retry challenge' ); // .css( 'background', '#3a968a' );
+                     makeStdButton( _section1.$el.find( '#try' ), function( btn ) {
                         me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording                                  
-                        btn.off().text( 'waiting for your move...' ).css( 'background', '#ddd' );
+                        btn.off().text( 'waiting for your move...' );
                         _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
                         _section3.$el.find( '.comment' ).remove();
-                        $notationDisplay.empty().append( '<span id="move0" class="move chicklet1 rounded ">0.start</span>' );
+                        $notationDisplay.empty().append( '<p id="movements"><span id="move0" class="move chicklet1 rounded ">0.start</span></p>' );
                         me.state.challengeStarted = true;  
-                     }, '#3a968a', '170px' );
+                     }, 'color-green', '170px' );
                   }
                });
 
@@ -925,13 +939,13 @@
                me.state.recordingFinished = false;
 
                markup = '<div class="author-only"> \
-                  <div id="setting" class="buttonType1 spacing1">setting challenge...</div>\
+                  <div id="setting" class="buttonType1 ">setting challenge...</div>\
                   <div id="cancel" class="buttonType1 spacing1">cancel</div>\
                   </div>';
                _section1.$el.append( markup );
 
                makeFancyButton( _section1.$el.find( '#setting' ), function() {}, '#aaa', '170px' );
-               makeFancyButton( _section1.$el.find( '#cancel' ), function() {
+               makeStdButton( _section1.$el.find( '#cancel' ), function() {
                   // TODO: all this code is a straight copy from buildDisplay()
                   var markup = '<div class="author-only"> \
                      <div id="set" class="buttonType1 smallerPadding">set challenge</div>\
@@ -941,9 +955,9 @@
 
                   _section1.html( markup );                  
                   _section1.$el.css( 'height', '34px' );
-                  makeFancyButton( _section1.$el.find( '#set' ), recordChallenge, '#3a968a', '150px' );
-                  makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
-                  makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
+                  makeStdButton( _section1.$el.find( '#set' ), recordChallenge, 'color-green', '150px' );
+                  makeStdButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, 'color-grey', '81px' );
+                  makeStdButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, 'color-grey', '81px' );
 
                   markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set initial position on board, then click set challenge button"></textarea>';
                   _section2.html( markup );
@@ -957,12 +971,12 @@
 
                   me.state.recording.pop();
                   me.state.recordingStarted = false;
-               }, '#7c7975', '170px' );
+               }, 'color-grey', '170px' );
 
                $commentEntry.remove();          
                _section3.$el.append( '<span class="comment">' + ( me.state.recording[ me.state.recording.length - 1 ].comment || " " )  + '</span>');  // put comment from last frame in new comment area
 
-               $notationDisplay.append( '<span id="move0" class="move chicklet1 rounded ">0.start</span>' );
+               $notationDisplay.append( '<p id="movements"><span id="move0" class="move chicklet1 rounded ">0.start</span></p>' );
             },
 
 
@@ -993,7 +1007,7 @@
 
                _section1.html( markup );                     // Section 1 holds the buttons
                _section1.$el.css( 'height', '34px' );
-               makeFancyButton( _section1.$el.find( '#set' ), function() {
+               makeStdButton( _section1.$el.find( '#set' ), function() {
                   // TODO: gotta get rid of recording, set my.state.exerciseCreated = false
                   me.persistToVSPlayer( { exerciseType: undefined, recording: undefined } );
                   me.board.setPosition( me.state.recording[0].pos );
@@ -1004,16 +1018,13 @@
                   _section2.$el.empty();
                   $notationDisplay.empty();
                   recordChallenge();
-               }, '#3a968a', '150px' );
-               makeFancyButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, '#7c7975', '81px' );
-               makeFancyButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, '#7c7975', '81px' );
+               }, 'color-green', '150px' );
+               makeStdButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, 'color-grey', '81px' );
+               makeStdButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, 'color-grey', '81px' );
 
                _section2.$el.empty().append( '<p>Challenge defined.</p>');
 
                _section3.$el.find( '.author-only' ).removeClass( 'author-only'); // Make the 'Challenge solution' visible to learner
-               // if ( me.editable ) {    
-               //    statusMessage("Recording challenge done. ", true ); 
-               // }
             },
 
 
