@@ -404,6 +404,13 @@
             },
 
 
+            jumpToSnapshot = function() {
+               me.board.setPosition( me.state.recording[0].pos );
+               _section2.$el.find( '.comment' ).remove();
+               _section2.$el.append( '<span class="comment">' + me.state.recording[0].comment + '</span>' );
+               $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
+            },
+
             // Called everytime user switches between Author and Learner modes in Versal player.
             toggleAuthorLearner = function ( isAuthorMode ) {
                var markup,
@@ -428,19 +435,19 @@
                            _section2.$el.find( '.comment' ).remove();
                         }
                         else {                                       // --==> SNAPSHOT Created, LEARNER mode
-                           fn = function() {
-                              me.board.setPosition( me.state.recording[0].pos );
-                              _section2.$el.find( '.comment' ).remove();
-                              _section2.$el.append( '<span class="comment">' + me.state.recording[0].comment + '</span>' );
-                              $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
-                           };
-                           markup = '<div id="showSnapshot" class="buttonType1 smallerPadding">jump to snapshot</div>';
-                           _section1.$el.append( markup );
+                           // fn = function() {
+                           //    me.board.setPosition( me.state.recording[0].pos );
+                           //    _section2.$el.find( '.comment' ).remove();
+                           //    _section2.$el.append( '<span class="comment">' + me.state.recording[0].comment + '</span>' );
+                           //    $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
+                           // };
+                           // markup = '<div id="showSnapshot" class="buttonType1 smallerPadding">jump to snapshot</div>';
+                           // _section1.$el.append( markup );
                            
-                           fn();    // jump to snapshot by default on going to learner mode
+                           jumpToSnapshot();    // jump to snapshot by default on going to learner mode
 
                            // 'jump to snapshot' button
-                           makeStdButton( _section1.$el.find( '#showSnapshot' ), function() { fn(); }, 'color-green', '172px' );
+                           // makeStdButton( _section1.$el.find( '#showSnapshot' ), function() { jumpToSnapshot(); }, 'color-green', '172px' );
                         }
                         break;
 
@@ -677,9 +684,6 @@
 
                _section1.$el.find( '#capture' ).text( 're-capture' );
                $notationDisplay.html( '<p class="highlight1">' + me.board.fen() + '</p>' );
-
-               // statusMessage( 'Snapshot done.  Click camera again to capture new snapshot.', true );
-               // _section3.display( '<p class="comment">' + me.state.recording[0].comment + '</p>' );
             },
 
 
@@ -693,7 +697,7 @@
                if ( me.state.recordingFinished ) {
                   me.state.exerciseCreated = false;
 
-                  _section2.$el.find( '.lilArrow' ).off().fadeOut();       // Turn off left/right buttons during recording
+                  _section2.$el.find( '.lilArrow' ).off().hide();       // Turn off left/right buttons during recording
                   $notationDisplay.find('.move').removeClass('highlight2');
                   $notationDisplay.find('.move').last().addClass('highlight2');
 
@@ -723,7 +727,7 @@
                $commentEntry.attr( 'placeholder', 'Recording started, enter optional note for step ' + me.state.recording.length );  
                $commentEntry.val('');                  // empty out to enable next comment
 
-               _section2.$el.find( '#eraseButton' ).off().fadeIn();  // show erase button; TODO: should probably only show after at least 1 frame besides start is recorded.
+               _section2.$el.find( '#eraseButton' ).off().show();  // show erase button; TODO: should probably only show after at least 1 frame besides start is recorded.
 
                // Handler for erase button, only active during recording
                makeButton( _section2.$el.find( '#eraseButton' ), function() {
@@ -756,7 +760,7 @@
                button.text( 'record' );
 
                _section1.$el.find( '#play' ).show();
-               _section2.$el.find( '#eraseButton' ).off().fadeOut();      // turn off erase button
+               _section2.$el.find( '#eraseButton' ).off().hide();      // turn off erase button
 
                $commentEntry.remove();          // with a recording finished, we no longer need the textarea
                _section3.$el.append( '<span class="comment">' + ( me.state.recording[ me.state.recording.length - 1 ].comment || " " )  + '</span>');  // put comment from last frame in new comment area
@@ -835,7 +839,7 @@
             // Make arrow buttons clickable for Author & Leaner; called after a recording is finished
             // TODO: pass in parameter to turn on/off arrowbuttons       
             enableArrowButtons = function() {
-               _section2.$el.find( '.lilArrow' ).fadeIn();   // show arrow buttons
+               _section2.$el.find( '.lilArrow' ).show();   // show arrow buttons
 
                _section2.$el.find( '.lilArrow' )       
                   .on( 'click', function(e) {
@@ -850,7 +854,7 @@
                         }
                         else {            // go Right 
                            if ( frame == me.state.recording.length - 1 ) { return; }
-                           $notationDisplay.find('.highlight2').removeClass('highlight2').next().addClass('highlight2');
+                           $notationDisplay.find('.highlight2').removeClass('highlight2').next( ).addClass('highlight2');
                            frame++;
                         }
                         me.board.setPosition( me.state.recording[frame].pos );
@@ -1057,8 +1061,11 @@
                   } else {
                      moves += ( '">    ' + i + '.' + me.state.recording[i].delta );
                   }
+                  if ( ( (i+1) % 5 === 0) ) moves += '\n';          // TODO: this is a hack to fit 5 moves per line of the textbox
                   moves += '</span>';
-                  if ( ( (i+1) % 5 === 0) ) moves += '<br>';
+                  // if ( ( (i+1) % 5 === 0) ) moves += '<br>';
+
+
                }
                moves += '</p></span>';
 
@@ -1069,17 +1076,20 @@
             // Called upon every movement of a piece on the board, or clear, or reset.
             // Necessary for recording exercises
             handleChessPieceMoveEvent = function( oldPos, newPos ) {
+               var markup;
                // For snapshots only
                if ( me.state.exerciseType === 'Snapshot' ) {
-                  // if ( me.state.exerciseCreated && me.board.isSnapshotState() ) {
-                  //    // _section3.putComment( '<p class="comment">' + me.state.recording[0].comment + '</p>' );
-                  //    console.log( 'put in the comment now' );
-                  // } else {
-                  //    console.log( 'Ttake out the comment now' );
-                  //    // _section3.removeComment();
-                  // }
-
                   $notationDisplay.html( '<p class="">' + ChessBoard.objToFen(newPos) + '</p>' );
+
+                  if ( me.state.exerciseCreated && !me.editable && _section1.$el.find( '#showSnapshot').length === 0 && !me.board.isSnapshotState() ) {
+                     markup = '<div id="showSnapshot" class="buttonType1 smallerPadding">return to snapshot</div>';
+                     _section1.$el.append( markup );
+                     makeStdButton( _section1.$el.find( '#showSnapshot' ), function(btn) { 
+                        jumpToSnapshot();
+                        $(btn).remove();
+                     }, 'color-green', '172px' );                           
+                  }
+
                   return;
                }
 
