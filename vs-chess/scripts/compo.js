@@ -7,39 +7,24 @@
    var _doc = (document._currentScript || document.currentScript).ownerDocument;
    var _template = _doc.querySelector('template#vs-chess-template');
 
-   // add some getters
    var Proto = Object.create(HTMLElement.prototype, BaseCompMethods.propertiesObject);
 
 
-  /* life cycle events
-   */
   _.extend(Proto, {
-      /* State saved on this object :
-         General Versal gadget stuff:
-            this.editable  -  Set by vs-player; true : author mode,  false : learner mode
-            this.config    -  Set by vs-player; the persisted gadget data
-
-         State specific to this Chess Gadget:
-            this.state     - All sorts of good stuff to enable this gadgets functionality, see reset().
-      */
-
       init: function() {
          this.reset();
 
          this.board.init( this );
-         this.view.init( this );                        // initialize the UI component
+         this.view.init( this );
 
-         // this.config contains authors persisted exercise info from Versal platform
          if ( this.config.exerciseType !== undefined && this.config.exerciseType !== null ) {
-            console.log('Chess gadget recovered saved data.');
             this.state.exerciseType = this.config.exerciseType;
             this.state.exerciseCreated = true;
             this.state.recording = this.config.recording;
 
-            this.view.buildDisplay( this.state.exerciseType );            // Build the auxillary controls based on exerciseType
+            this.view.buildDisplay( this.state.exerciseType );
          }
-         else {  // No exercise info found in config
-            console.log('Chess gadget found no previous saved data.');
+         else {
             this.view.promptForExerciseType();
          }
       },
@@ -57,17 +42,14 @@
       },
 
       createdCallback: function(){
-         // console.log('createdCallback');
          this.innerHTML = _template.innerHTML;
          this.$el = $(this);
       },
 
       attachedCallback: function(){
-         // toggleBoard(false);
       },
 
       detachedCallback: function(){
-         // this.toggleMouse(false);
          this.board.destroy();
       },
 
@@ -84,56 +66,49 @@
       },
 
       attributeChangedCallback: function(attrName, oldVal, newVal){
-         // Returns true if data-config event was a piece move (rather than prop sheet change)
          function pieceMoved() {     
             var oldV, newV;
             if ( attrName === 'editable' ) return false;
 
-            if ( oldVal === null && newVal === null ) {   // oldVal, newVal are null until a move is generated
+            if ( oldVal === null && newVal === null ) {  
                return false;
             }
-            else if ( oldVal === null && newVal.position === undefined ) { // A prop-sheet peek can cause this situation
+            else if ( oldVal === null && newVal.position === undefined ) { 
                return false;
             } else {
                oldV = JSON.parse(oldVal);  newV = JSON.parse(newVal);
                if ( oldV.position === undefined && newV.position === undefined ) return false;
-               // return !_.isEqual( oldV.position, newV.position );
-               return ! ( oldV.position ===  newV.position );          // TODO: _.isEqual was necessary for comparing position objects, but not for strings
+               return ! ( oldV.position ===  newV.position );
             }
          }
 
 
-         // The first time this handler fn is called (at gadget startup),
-         // initialize the auxillary UI stuff.   
-         if ( this.state === undefined ) {  // this.state is not declared above, so will be undefined
+         if ( this.state === undefined ) {
             this.state = { };
-            this.init();                                  //
+            this.init();
          }
 
          switch (attrName) {
-            case 'editable':                // Event indicates toggle between Author/Learner mode
-               this.board.refresh(); // this.toggleBoard(this.editable);
+            case 'editable':
+               this.board.refresh();
                this.toggleAuthorLearner( this.editable );
                break;
 
-            case 'data-config':             // Event indicates prop-sheet changes OR chessboard move
-               if ( ! pieceMoved() ) {       // If its not a piece movement, its a prop sheet change
-                 this.board.refresh(); // this.toggleBoard(this.editable);
+            case 'data-config':
+               if ( ! pieceMoved() ) {
+                 this.board.refresh();
                }
                break;
 
             default:
                break;
          }
-      }  // end attributeChangedCallback()
-
+      }
    });
 
 
 
    _.extend(Proto, {
-      /* The board holds and abstracts chessboard.js ; TODO: chess.js logic will go in here also
-       */
       board: function() {
          var me = null,
             _theBoard = null,
@@ -146,28 +121,23 @@
                }
             },
 
-         // Called upon author/leaner change, or prop-sheet change
          refresh = function ( allowMovement ) {
-            // Handler for catching chessboard moves
             var onChange = function(oldPos, newPos) {
                   _oldPos = oldPos;
                   _newPos = newPos;
 
-                  // Tell the view about the chess piece movement; it will trigger recordings...
-                  // me.view.chessPieceMoveEvent( ChessBoard.objToFen(oldPos), ChessBoard.objToFen(newPos) );
                   me.view.chessPieceMoveEvent( oldPos, newPos );                     
                };
 
             var cfg,
-               position = _newPos || 'start';    //this.config is undefined in detachedCallback for Chrome36
+               position = _newPos || 'start';
 
             cfg = {
                draggable: ( allowMovement === undefined ) ? true : allowMovement,
                showNotation: (me.config && me.config.showNotation !== undefined ) ? me.config.showNotation : false,
-               // setting a default for sparePieces in versal.json breaks draggable: false !!
-               sparePieces : true, // (me.config && me.config.sparePieces !== undefined ) ? me.config.sparePieces : false,
+               sparePieces : true, 
                orientation: (me.config  && (me.config.flipped === true) )  ? 'black' : 'white',
-               dropOffBoard: 'trash', // (me.config && me.config.dropOffBoard === true ) ? 'trash' : 'snapback',
+               dropOffBoard: 'trash',
                moveSpeed: 'slow',
                snapbackSpeed: 500,
                snapSpeed: 100,
@@ -185,7 +155,6 @@
          setPosition = function( pos ) {
             if ( _theBoard === null ) { refresh(); }
             _theBoard.position( pos );
-            // TODO: chess.js stuff
          },       
          isSnapshotState = function() {
             if ( _theBoard === null ) return false;
@@ -204,42 +173,35 @@
             fen : fen
          };
 
-      }(),           // end board
+      }(),
    });
 
 
    _.extend(Proto, {
-      /* The View holds 
-       */
       view: function() {
-         var me = null,          // Access to all objects that were added onto variable Proto via _.extend()
-                                 // Cached access to DOM elements:
-            $mainControls,       //    Auxillary controls & display area for exercises & challenge 
-            $titleText,          //    Where the title of the gadget gets displayed, set to either 'Chess', 'Snapshot', 'Sequence', or 'Challenge'
-            $resetBtn,           //    The reset gadget button that is displayed to the author once an exercise type is chosen
-            $statusModal,        //    The pop-up modal thrown up when reset button is pressed
-            $commentEntry,       //    Where author enters comments/notes for frames in snpashot/sequence/challenge
-            $notationDisplay;    //    Where gadget displays FEN notation or last moved recorded; both authors & leaners
+         var me = null,
 
+            $mainControls,
+            $titleText,
+            $resetBtn,
+            $statusModal,
+            $commentEntry, 
+            $notationDisplay;
 
-         /* The $mainControls sits to the right of the chessboard and wraps basically all the controls except for reset-button.
-            It has 4 vertically stacked container divs: _section0 to _section3;
-          */
          var section = function( which ) {
                var obj = {};
 
-               $mainControls.append( '<div id="section' + which + '" class="section"></div>' ); // inject into DOM
+               $mainControls.append( '<div id="section' + which + '" class="section"></div>' );
 
                obj.$el = $( '#section' + which );               
-               // obj.display = function( markup ) { obj.$el.empty().append( markup ); };
                obj.html = function( markup ) { obj.$el.html( markup ); };
 
                return obj;
             },
-            _section0,           // Just for vertical spacing from top
-            _section1,           // Holds different buttons based on exercise type author chose
-            _section2,           // Either note/comment entry area or where move notation is displayed.
-            _section3;           // same as _section2
+            _section0,
+            _section1,
+            _section2,
+            _section3;
 
 
 
@@ -259,42 +221,16 @@
                _section3 = section( 3 );
 
                reset();
-               // TODO: handler for non-html 5 browsers to catch maxlength of textarea
-               // http://stackoverflow.com/questions/4459610/set-maxlength-in-html-textarea                     
             },
 
-            // displayOff = function( el ) { el.css( 'display', 'none' ); },
-
-            // displayOn = function( el, inlineBlock ) { el.css( 'display', inlineBlock ? 'inline-block' : 'block' ); },
 
             setTitle = function( str ) { $titleText.html( '<span class="title">' + str + '</span>'  ); },
 
             reset = function() {
-/*
-               // Turn off handlers for top row buttons and hide them
-               displayOff( _section0.$el.find( '.pic' ).off() );
-
-               // In case was in the middle of recording, turn off animations
-               _section0.$el.find( '#pic2' ).removeClass( 'animate1' );  // 
-
-               // Remove borders around section (not there at gadget startup, but left over after a reset)
-               _section1.$el.removeClass( 'bordered' );
-
-               // hide comment entry textarea
-               displayOff( _section2.$commentEntry );
-
-               // In case we were showing comments from previous recording, clear it out
-               _section3.$el.empty();               
-
-               // $statusModal.hide();
-*/
-               // Hide reset gadget button; will be visible again after author chooses exercise type
                $resetBtn.hide();
             },
 
 
-            /* Prompt exercise & challenge creation options for author;
-             */
             promptForExerciseType = function() {
                var markup = 
                   '<div id="exerciseTypeChoices" class="author-only"> \
@@ -332,8 +268,7 @@
             },
 
 
-            makeButton = function( $el, fn  ) {                  // Make a button out of ui element;
-               // $el.css( 'height', '30px' );
+            makeButton = function( $el, fn  ) { 
                $el.on('mouseover mouseout click', function(e) {
                   if ( e.type === 'mouseover' ) {
                      // $(this).addClass('buttonOver1');
@@ -342,26 +277,24 @@
                      // $(this).removeClass('buttonOver1');
                   }
                   else if ( e.type === 'click' ) {
-                     $(this) // .removeClass('buttonOver1')
-                        .hide()                    // Turn button off & on for visual feedback.
+                     $(this)
+                        .hide() 
                         .fadeIn( 175, function() { 
-                           fn( $(this) );          // invoke passed in handler, and pass it jquery ref to element
+                           fn( $(this) );
                         });
                   }
                });
             },
 
 
-            // Reset gadget for author to state before choosing which exercise type to create
             makeResetButton = function( $el ) {
-               $el.off();     // Make sure to take off all handlers from before
+               $el.off();
                makeButton( $el, function(e) {
                   statusMessage( 'Are you sure you want to reset the gadget ?', 
                      function() {
                         $(this).fadeOut( '75' );
                         $statusModal.empty();
                         $statusModal.css( 'display', 'none' );
-                        console.log( '!!! Resetting Chess gadget !!!' );
                         $commentEntry.remove();
                         _section1.$el.empty();
                         _section2.$el.empty();
@@ -395,7 +328,7 @@
                makeStdButton( $statusModal.find( '#no' ), cancel, 'color-grey', '100px' );
                makeStdButton( $statusModal.find( '#yes' ), fn, 'color-green', '100px' );
 
-               $('body').on( 'keyup.statusMsg', function(e) {      // catch esc key
+               $('body').on( 'keyup.statusMsg', function(e) {
                   if ( e.keyCode === 27 ) {
                      $('body').off( 'keyup.statusMsg' );
                      cancel();
@@ -411,55 +344,36 @@
                $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
             },
 
-            // Called everytime user switches between Author and Learner modes in Versal player.
             toggleAuthorLearner = function ( isAuthorMode ) {
                var markup,
                   fn;
-               // First turn on or off all elements that are author-mode specific
-               // $mainControls.find('.author-only').css( 'visibility', ( isAuthorMode ? 'visible' : 'hidden' )  );
 
                $mainControls.find('.author-only').css( 'display', ( isAuthorMode ? 'block' : 'none' ) );
                $resetBtn.css( 'visibility', ( isAuthorMode ? 'visible' : 'hidden' ) );
 
-
-               // If an exercise type hasn't been set author, there's nothing else to check for, just return.
                if ( me.state.exerciseType === undefined ) return;
 
-
-               if ( me.state.exerciseCreated ) {                      // --==> Exercise Created
+               if ( me.state.exerciseCreated ) {
 
                   switch ( me.state.exerciseType ) {
                      case 'Snapshot' :
-                        if ( isAuthorMode ) {                        // --==> SNAPSHOT Created, AUTHOR mode
+                        if ( isAuthorMode ) {
                            _section1.$el.find( '#showSnapshot' ).remove();
                            _section2.$el.find( '.comment' ).remove();
                         }
-                        else {                                       // --==> SNAPSHOT Created, LEARNER mode
-                           // fn = function() {
-                           //    me.board.setPosition( me.state.recording[0].pos );
-                           //    _section2.$el.find( '.comment' ).remove();
-                           //    _section2.$el.append( '<span class="comment">' + me.state.recording[0].comment + '</span>' );
-                           //    $notationDisplay.html( '<p class="highlight1">' + me.state.recording[0].pos + '</p>' );
-                           // };
-                           // markup = '<div id="showSnapshot" class="buttonType1 smallerPadding">jump to snapshot</div>';
-                           // _section1.$el.append( markup );
-                           
-                           jumpToSnapshot();    // jump to snapshot by default on going to learner mode
-
-                           // 'jump to snapshot' button
-                           // makeStdButton( _section1.$el.find( '#showSnapshot' ), function() { jumpToSnapshot(); }, 'color-green', '172px' );
+                        else {
+                           jumpToSnapshot();
                         }
                         break;
 
                      case 'Sequence' :
-                        if ( isAuthorMode ) {                        // --==> Sequence Created, AUTHOR mode
+                        if ( isAuthorMode ) {
                            _section1.$el.find( '#topRow' ).css( 'display', 'inline-block' );
                            _section1.$el.find( '#record' ).show();
                         }
-                        else {                                       // --==> Sequence Created, LEARNER mode
+                        else {
                            _section1.$el.find( '#record' ).hide(); 
                            readyToPlaySequence();
-                           // _section1.$el.find( '#record' ).off();
                         }
                         break;
 
@@ -471,12 +385,12 @@
                            _section3.$el.find( '.comment' ).remove();
                            _section3.$el.find( '#challengeBox' ).text( 'Challenge Solution' ); 
                         } 
-                        else {                                       // --==> Challenge Created, LEARNER mode
+                        else {
                            if ( ! me.state.challengeStarted ) {
                               initChallenge();
                            }
 
-                           me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording 
+                           me.board.setPosition( me.state.recording[0].pos );
 
                            markup = '<div id="learnerControls"> \
                                  <div id="try" class="buttonType1 spacing1 smallerPadding">try challenge</div>\
@@ -486,10 +400,10 @@
                               _section1.$el.append( markup );
 
                               makeStdButton( _section1.$el.find( '#try' ), function( btn ) {
-                                 me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording
+                                 me.board.setPosition( me.state.recording[0].pos ); 
                                  btn.off().text( 'waiting for your move...' );
                                  _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
-                                 _section3.$el.find( '#challengeBox' ).text( 'Your move' );     // instead of "Challenge Solution"
+                                 _section3.$el.find( '#challengeBox' ).text( 'Your move' );
                                  me.state.challengeStarted = true;  
                               }, 'color-green', '170px' );
 
@@ -498,7 +412,7 @@
                            }
 
                            _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
-                           _section3.$el.find( '#challengeBox' ).text( '' );     // instead of "Challenge Solution"
+                           _section3.$el.find( '#challengeBox' ).text( '' );
                            $notationDisplay.empty().append( '<p id="movements"><span id="move0" class="move chicklet1 rounded ">0.start</span></p>' );                           
                            _section3.$el.find( '.comment' ).remove();
                         }
@@ -506,19 +420,17 @@
                         break;
                   }
                }
-               else {                                                // --==> Exercise NOT yet created
+               else {
                   switch ( me.state.exerciseType ) {
                      case 'Snapshot':
                         if ( isAuthorMode ) {
 
-                        } else {                                     // --==> SNAPSHOT NOT yet created, LEARNER mode
-                           // no comment to show, fen notation should be in its place , so nothing to do.
+                        } else {
                         }
 
                      break;
 
                      case 'Sequence':
-                        // Take care of switching to learner mode in the middle of recording.
                         if ( me.state.recordingStarted && !me.state.recordingFinished ) {
                            stopRecording();
                         }
@@ -528,7 +440,6 @@
                      break;
 
                      default:
-                        // TODO: throw an exception?
                      break;
                   }
                }
@@ -537,18 +448,13 @@
             },
 
 
-
-            // Display ui components based on which exercise type was chosen,
-            // setup appropriate buttons to handle recording exercise types.
             buildDisplay = function( exerciseType ) {
                var markup;
 
-               // // Make a reset gadget button which erases all authors recorded exercise info, and restats gadget from scratch
                makeResetButton( $resetBtn );
 
                setTitle( me.state.exerciseType );
 
-               // Show exercise-specific buttons, etc
                switch ( me.state.exerciseType ) {
                   case 'Snapshot':
                      markup = '<div id="" class="author-only"> \
@@ -557,14 +463,14 @@
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
 
-                     _section1.html( markup );                     // Section 1 holds the buttons
+                     _section1.html( markup );
                      _section1.$el.css( 'height', '34px' );
-                     makeStdButton( _section1.$el.find( '#capture' ), recordSnapshot, 'color-green', '171px' );     // TODO: should be 172 per spec but tweaked to make things line up
+                     makeStdButton( _section1.$el.find( '#capture' ), recordSnapshot, 'color-green', '171px' );
                      makeStdButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, 'color-grey', '81px' );
                      makeStdButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, 'color-grey', '81px' );
 
                      markup = '<textarea id="commentEntry" class="textbox2 author-only" name="textarea" maxlength="310" placeholder="Write a note or description about this position"></textarea>';
-                     _section2.html( markup );                    // Section 2 holds the comment entry area
+                     _section2.html( markup );
                      _section2.$el.css( 'height', '105px' );
 
                      markup = '<span class="faded1">FEN notation</span><br><div id="notationDisplay" class="textbox bordered"></div>';
@@ -580,7 +486,7 @@
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
 
-                     _section1.html( markup );                     // Section 1 holds the buttons
+                     _section1.html( markup );
                      _section1.$el.css( 'height', '34px' );
 
                      makeStdButton( _section1.$el.find( '#record' ), recordSequence, 'color-red', '81px' );                     
@@ -595,34 +501,30 @@
                         </div>\
                         <div id="notationDisplay" class="textbox bordered"></div>';
                      _section2.html( markup );
-                     _section2.$el.find( '.lilButton' ).hide(); // Erase enabled during recording; left/right enabled after recording
+                     _section2.$el.find( '.lilButton' ).hide();
                      _section2.$el.css( 'height', '105px' );
 
                      markup = '<textarea id="commentEntry" class="textbox2 author-only" name="textarea" maxlength="310" placeholder="Set board to start position, enter optional comment for start position here"></textarea>';
                      _section3.html( markup );
                      _section3.$el.css( 'height', '105px' );
-                     
-                     // me.addToPropertySheet( {  // TODO!
-                     //    playSpeed:  { type: 'Range', min: 1, max: 10, step: 1 }
-                     // } );
-
+                  
                     break;
 
-                  case 'Challenge':                         // TODO: make dry; this is almost same code as snapshot
+                  case 'Challenge':
                      markup = '<div class="author-only"> \
                         <div id="set" class="buttonType1 smallerPadding">set challenge</div>\
                         <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
                         <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                      </div>';
 
-                     _section1.html( markup );                     // Section 1 holds the buttons
+                     _section1.html( markup );
                      _section1.$el.css( 'height', '34px' );
                      makeStdButton( _section1.$el.find( '#set' ), recordChallenge, 'color-green', '171px' );
                      makeStdButton( _section1.$el.find( '#reset' ), function() { me.board.resetToStart(); }, 'color-grey', '81px' );
                      makeStdButton( _section1.$el.find( '#clear' ), function() { me.board.clearAllPieces(); }, 'color-grey', '81px' );
 
                      markup = '<textarea id="commentEntry" class="textbox2 author-only" name="textarea" maxlength="310" placeholder="Enter instructions for your challenge here.\n\nTo create a challenge, set your initial position on the board, then click set challenge"></textarea>';
-                     _section2.html( markup );                    // Section 2 holds the comment entry area
+                     _section2.html( markup );
                      _section2.$el.css( 'height', '105px' );
 
                      markup = '<div class="author-only"><span id="challengeBox" class="faded1">Challenge Solution</span><br><div id="notationDisplay" class="textbox bordered"></div></div>';
@@ -638,11 +540,7 @@
                $commentEntry = $mainControls.find( '#commentEntry' );
                $notationDisplay = $mainControls.find( '#notationDisplay' );
 
-
-               // If a BROWSER REFRESH happened, Versal player comes back in Leaner mode;
-               // do exercise-specific initialization based on the pre-recorded exercise
                if ( me.state.exerciseCreated === true ) {
-                  console.log('Chess gadget: Browser refresh with an exercise recorded happened.');
 
                   switch ( me.state.exerciseType ) {
                      case 'Snapshot':
@@ -664,16 +562,14 @@
                      default:
                      break;
                   }
-                  me.state.recordingFinished = true;        // TODO: necessary anymore ??
+                  me.state.recordingFinished = true;
                   $resetBtn.show();
                }
 
             },
 
 
-            // Callback for Snapshot button, EXERCISE 1
             recordSnapshot = function() {
-               // If there is a previously recorded snapshot, we'll want to replace it
                if ( me.state.exerciseCreated ) {
                   me.state.recording.pop();
                }
@@ -687,21 +583,17 @@
             },
 
 
-            // Callback for Sequence Record on/off button, EXERCISE 2
             recordSequence = function( button ) {
-               // turn off catching button press for now, and add class to show user recording started
-               button.off(); // .addClass('animate1');
+               button.off();
                button.text( 'stop' );
 
-               // If a previous recording exists, we want to add to it
                if ( me.state.recordingFinished ) {
                   me.state.exerciseCreated = false;
 
-                  _section2.$el.find( '.lilArrow' ).off().hide();       // Turn off left/right buttons during recording
+                  _section2.$el.find( '.lilArrow' ).off().hide();
                   $notationDisplay.find('.move').removeClass('highlight2');
                   $notationDisplay.find('.move').last().addClass('highlight2');
 
-                  // restore the textarea that was removed when recording was stopped.
                   var markup = '<textarea id="commentEntry" class="textbox author-only" name="textarea" maxlength="310" placeholder="Set board to start position and enter comment for it here"></textarea>';
                   _section3.html( markup );
                   _section3.$el.css( 'height', '105px' );
@@ -709,9 +601,9 @@
 
                   me.board.setPosition( me.state.recording[ me.state.recording.length - 1 ].pos  );
                }
-               else {      // Start a new Sequence recording
-                  me.state.recording.push({                  // save current position as starting position
-                     pos: me.board.fen(), // TODO:  old code: me.newPos || me.board.fen(), 
+               else {
+                  me.state.recording.push({
+                     pos: me.board.fen(),
                      comment: $commentEntry.val().trim(), 
                      delta: 'start' 
                   });
@@ -725,11 +617,10 @@
                _section1.$el.find( '#clear' ).hide();
 
                $commentEntry.attr( 'placeholder', 'Recording started, enter optional note for step ' + me.state.recording.length );  
-               $commentEntry.val('');                  // empty out to enable next comment
+               $commentEntry.val('');
 
-               _section2.$el.find( '#eraseButton' ).off().show();  // show erase button; TODO: should probably only show after at least 1 frame besides start is recorded.
+               _section2.$el.find( '#eraseButton' ).off().show();
 
-               // Handler for erase button, only active during recording
                makeButton( _section2.$el.find( '#eraseButton' ), function() {
                   var html;
 
@@ -747,33 +638,27 @@
 
 
                _section1.$el.find( '#play' ).hide();
-               // Handler for next click to stop the recording
                button.one( 'click', stopRecording );
             },
 
 
-            // called after hitting recording button to stop, or switch to learner mode in the middle of recording sequence
             stopRecording = function() {   
-               var button = _section1.$el.find( '#record' );   // the start/stop recording button
-
-               // button.removeClass('animate1');           // Stop the recording-in-progress animation
+               var button = _section1.$el.find( '#record' );
                button.text( 'record' );
 
                _section1.$el.find( '#play' ).show();
-               _section2.$el.find( '#eraseButton' ).off().hide();      // turn off erase button
+               _section2.$el.find( '#eraseButton' ).off().hide();
 
-               $commentEntry.remove();          // with a recording finished, we no longer need the textarea
+               $commentEntry.remove();
                _section3.$el.append( '<span class="comment">' + ( me.state.recording[ me.state.recording.length - 1 ].comment || " " )  + '</span>');  // put comment from last frame in new comment area
 
                me.persistToVSPlayer( { exerciseType: me.state.exerciseType, recording: me.state.recording } );
                me.state.exerciseCreated = true;
                me.state.recordingFinished = true;  
-               // statusMessage( "Recording sequence done. Click recorder button again to add or delete frames.", true ); 
 
-               // Show the 'play' button if its not already showing
                readyToPlaySequence();
 
-               makeButton( button, recordSequence );    // setup to enable restarting recording
+               makeButton( button, recordSequence );
 
                _section1.$el.find( '#reset' ).show();
                _section1.$el.find( '#clear' ).show();
@@ -783,29 +668,27 @@
             },
 
 
-            // call this after stopping recording to create the play button,  
-            // call it again in learner mode to make it displayable in learner mode (!)
             readyToPlaySequence = function( delay ) {
                var topRow = _section1.$el.find('#topRow'),
                   $thePlayButton,
                   setupPlayButton = function() {
-                     makeStdButton( $thePlayButton, function() {  // enable the Play sequence button
+                     makeStdButton( $thePlayButton, function() {
                         var i = 0,
-                        timeoutID,        // TODO: have to deal with author/learner switch during playback... make this global?
+                        timeoutID,
                         loopAndPause = function() {
                            var elt;
-                           _section2.$el.find( '.move' ).removeClass( 'highlight2' );        // clear highlights
-                           _section2.$el.find( '#move' + i ).addClass( 'highlight2' );       // target current one in loop
-                           me.board.setPosition( me.state.recording[i].pos );                // take board to that position
+                           _section2.$el.find( '.move' ).removeClass( 'highlight2' );
+                           _section2.$el.find( '#move' + i ).addClass( 'highlight2' );
+                           me.board.setPosition( me.state.recording[i].pos );
                            _section3.$el.empty().append( '<span class="comment">' + ( me.state.recording[i].comment || " " ) + '</span>' );
-                           if ( timeoutID ) window.clearTimeout( timeoutID );             // pause, then advance to next one
+                           if ( timeoutID ) window.clearTimeout( timeoutID );
                            if ( i < ( me.state.recording.length - 1 ) ) {
                               i++;
                               timeoutID = window.setTimeout( loopAndPause, 1000 );
                            } else {
                               enableClickOnFrame();
                               enableArrowButtons();
-                              _section1.$el.find( '#record' ).show();      // TODO: might have wrap this in a check for editable == true
+                              _section1.$el.find( '#record' ).show();
                               _section1.$el.find( '#reset' ).show();                    
                               _section1.$el.find( '#clear' ).show();
                               setupPlayButton();
@@ -813,8 +696,8 @@
                         };
 
                         $thePlayButton.off();
-                        _section2.$el.find( '.move' ).off();     // turn off clicking on frames during playback
-                        _section2.$el.find( '.lilArrow').off();   // turn off arrow buttons for now too
+                        _section2.$el.find( '.move' ).off();
+                        _section2.$el.find( '.lilArrow').off();
 
                         _section1.$el.find( '#record' ).hide();
                         _section1.$el.find( '#reset' ).hide();                    
@@ -824,35 +707,33 @@
                      }, 'color-green', '81px' ); 
                   };
 
-               if ( _section1.$el.find( '#play' ).length !== 0 ) {  // if there IS an existing play button
+               if ( _section1.$el.find( '#play' ).length !== 0 ) {
                   return;
                }
-               else {      // we have to create play button
+               else {
                   _section1.$el.prepend( '<div id="play" class="buttonType1 smallerPadding">play</div>' );
-                  _section1.$el.find( '#play').css( 'margin-right', '9px' );  // TODO: 10px makes things go over!
+                  _section1.$el.find( '#play').css( 'margin-right', '9px' );
                   $thePlayButton = _section1.$el.find( '#play' );
                   setupPlayButton();
                }
             },
 
 
-            // Make arrow buttons clickable for Author & Leaner; called after a recording is finished
-            // TODO: pass in parameter to turn on/off arrowbuttons       
             enableArrowButtons = function() {
-               _section2.$el.find( '.lilArrow' ).show();   // show arrow buttons
+               _section2.$el.find( '.lilArrow' ).show();
 
                _section2.$el.find( '.lilArrow' )       
                   .on( 'click', function(e) {
                      $(this).hide().fadeIn( 150, function() { 
-                        var frame = $notationDisplay.find('.highlight2').text().trim();      // set frame initially to last one in list
+                        var frame = $notationDisplay.find('.highlight2').text().trim();
 
-                        frame = ( frame.slice(0, frame.indexOf('.')) ) * 1;     // extract frame #, cast to number           
+                        frame = ( frame.slice(0, frame.indexOf('.')) ) * 1;      
                         if ( $(this).context.id === 'leftButton' )  {
                            if ( frame == 0 ) { return; }
                            $notationDisplay.find('.highlight2').removeClass('highlight2').prev().addClass('highlight2');
                            frame--;
                         }
-                        else {            // go Right 
+                        else {
                            if ( frame == me.state.recording.length - 1 ) { return; }
                            $notationDisplay.find('.highlight2').removeClass('highlight2').next( ).addClass('highlight2');
                            frame++;
@@ -865,29 +746,24 @@
 
 
 
-            // Make each frame in sequence recording clickable for Author & Leaner; called after a recording is finished
-            // TODO: pass in parameter to turn on/off click-on
             enableClickOnFrame = function() {
                _section2.$el.find('.move')
                   .addClass('cursor1')
-                  .on( 'click', function(e) {   // handler to allow jumping to any step in the recorded sequence
-                     var frame = $(e.target).text().trim();          // get text from the html for frame #
+                  .on( 'click', function(e) {
+                     var frame = $(e.target).text().trim();
 
                      _section2.$el.find('.move').removeClass('highlight2');
                      $(e.target).addClass('highlight2');
-                     frame = frame.slice(0, frame.indexOf('.'));     // extract frame #
+                     frame = frame.slice(0, frame.indexOf('.'));
                      me.board.setPosition( me.state.recording[frame].pos );
                      _section3.$el.empty().append( '<span class="comment">' + ( me.state.recording[frame].comment || " " ) + '</span>' );
                });
             },
 
 
-/*  
-* The end of sequence stuff, now the challenge...
-*/
             initChallenge = function() {
                var challenges = [{
-                     answers: me.state.recording[1].pos,       // This contains the correct answer to the challenge
+                     answers: me.state.recording[1].pos,
                      scoring: 'strict'
                   }];
 
@@ -899,15 +775,14 @@
                         _section3.$el.append('<p class="comment challengeResult correct">Correct!</p>');
                      } else {
                         _section3.$el.append('<p class="comment challengeResult incorrect">Incorrect</p>');
-                        // me.player.setLearnerState( { score: 0 } );
                      }
 
                      me.state.challengeStarted = false;
                      me.state.challengeFinished = false;
 
-                     _section1.$el.find( '#try' ).text( 'retry challenge' ); // .css( 'background', '#3a968a' );
+                     _section1.$el.find( '#try' ).text( 'retry challenge' );
                      makeStdButton( _section1.$el.find( '#try' ), function( btn ) {
-                        me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording                                  
+                        me.board.setPosition( me.state.recording[0].pos );                               
                         btn.off().text( 'waiting for your move...' );
                         _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
                         _section3.$el.find( '.comment' ).remove();
@@ -925,13 +800,10 @@
                var markup;
                _section1.$el.find( '.buttonType1').remove(); 
 
-               if (  me.state.recordingFinished ) {      // A previous recording exists
-                  // TODO: delete recording[1] ??
-                  // Other option is to also delete the starting position but that's the same as starting
-                  // over and you can use the reset button for that.
+               if (  me.state.recordingFinished ) {
                } 
-               else {            // Brand new recording
-                  me.state.recording.push({                  // save current position as starting position
+               else {
+                  me.state.recording.push({
                      pos: me.newPos || me.board.fen(),
                      comment: $commentEntry.val().trim(),
                      delta: 'start'
@@ -950,7 +822,6 @@
 
                makeFancyButton( _section1.$el.find( '#setting' ), function() {}, '#aaa', '170px' );
                makeStdButton( _section1.$el.find( '#cancel' ), function() {
-                  // TODO: all this code is a straight copy from buildDisplay()
                   var markup = '<div class="author-only"> \
                      <div id="set" class="buttonType1 smallerPadding">set challenge</div>\
                      <div id="reset" class="buttonType1 fontSize13 spacing1">reset pieces</div>\
@@ -984,7 +855,6 @@
             },
 
 
-            // After a challenge recording is started, a chess-piece move triggers a call to this method.
             stopRecordingChallenge = function() {
                var markup = '<div class="author-only"> \
                   <div id="set" class="buttonType1 smallerPadding">reset challenge</div>\
@@ -992,27 +862,13 @@
                   <div id="clear" class="buttonType1 fontSize13 spacing1">clear board</div>\
                </div>';
 
-               // makeButton(   ).off().fadeIn(), function(e) {         //  erase end-state button
-               //   me.state.recording.pop();  // get rid of challenge move, now only start position is left
-               //   me.save( { exerciseType: me.state.exerciseType, recording: me.state.recording } );            
-               //   me.state.exerciseCreated = false;
-               //   me.board.setPosition( me.state.recording[0].pos );
-               //   me.state.recordingFinished = false;
-               //   button.addClass( 'animate1' );
-               //   el.$sections[1].find('.move').off();  // disable clicking on frame
-               //   el.$sections[1].empty()
-               //     .append( '<p>Starting position set.  Now move a chess piece to define challenge completion state.</p>');
-               //   // el.$commentEntry.show();              
-               // }); 
-
                me.persistToVSPlayer( { exerciseType: me.state.exerciseType, recording: me.state.recording } );
                me.state.exerciseCreated = true;
                me.state.recordingFinished = true;
 
-               _section1.html( markup );                     // Section 1 holds the buttons
+               _section1.html( markup );
                _section1.$el.css( 'height', '34px' );
                makeStdButton( _section1.$el.find( '#set' ), function() {
-                  // TODO: gotta get rid of recording, set my.state.exerciseCreated = false
                   me.persistToVSPlayer( { exerciseType: undefined, recording: undefined } );
                   me.board.setPosition( me.state.recording[0].pos );
                   me.state.recording = [];
@@ -1028,13 +884,12 @@
 
                _section2.$el.empty().append( '<p>Challenge defined.</p>');
 
-               _section3.$el.find( '.author-only' ).removeClass( 'author-only'); // Make the 'Challenge solution' visible to learner
+               _section3.$el.find( '.author-only' ).removeClass( 'author-only');
             },
 
 
 
             
-            // Return key/val in b thats not in a
             objectDiff = function ( a, b ) {
                var result = {};
                for (var i in b) {
@@ -1042,29 +897,24 @@
                      result[i] = b[i];
                   }
                }
-               // Turn into a string, take out non-alphanum characters, return it
                return JSON.stringify(result).replace(/[^\w\s]/gi, '');   
             },
 
 
-            // Put together html string containing the changes between each recorded move,
-            // called mainly by handleChessPieceMoveEvent() but also after browser refresh prompts re-displaying recorded sequence.
             generateDiffList = function( moveDetail ) {
                var i, 
                moves = '<p id="movements" class="challengeAuthorOnly"><span id="move0" class="move chicklet1 rounded ">0.start</span>';
 
                for ( i = 1; i < me.state.recording.length; i++ ) {
                   moves += ( '   <span id="move' + i + '" class="move chicklet1 rounded ' );
-                  if ( me.state.exerciseType === 'Challenge' ) moves += 'chicklet2 ';    // class for Challenge
+                  if ( me.state.exerciseType === 'Challenge' ) moves += 'chicklet2 ';
                   if ( i === me.state.recording.length - 1 ) {
                      moves += ( 'highlight2">    ' + i + '.' + moveDetail );
                   } else {
                      moves += ( '">    ' + i + '.' + me.state.recording[i].delta );
                   }
-                  if ( ( (i+1) % 5 === 0) ) moves += '\n';          // TODO: this is a hack to fit 5 moves per line of the textbox
+                  if ( ( (i+1) % 5 === 0) ) moves += '\n';
                   moves += '</span>';
-                  // if ( ( (i+1) % 5 === 0) ) moves += '<br>';
-
 
                }
                moves += '</p></span>';
@@ -1073,11 +923,8 @@
             },
 
 
-            // Called upon every movement of a piece on the board, or clear, or reset.
-            // Necessary for recording exercises
             handleChessPieceMoveEvent = function( oldPos, newPos ) {
                var markup;
-               // For snapshots only
                if ( me.state.exerciseType === 'Snapshot' ) {
                   $notationDisplay.html( '<p class="">' + ChessBoard.objToFen(newPos) + '</p>' );
 
@@ -1093,19 +940,18 @@
                   return;
                }
 
-               // // For Sequence and Challenge recordings, only
                var lastDiff;
 
                if ( me.state.recordingStarted && !me.state.recordingFinished && !me.state.isDeleting) {
                   lastDiff = objectDiff( oldPos, newPos );
 
                   me.state.recording.push({ 
-                     pos: newPos,                               // Record the movement for the sequence
+                     pos: newPos,
                      comment: $commentEntry.val().trim(),
                      delta: lastDiff
                   });
 
-                  $commentEntry.val('');                 // empty out to enable next comment 
+                  $commentEntry.val('');
                   
                   if ( me.state.exerciseType === 'Challenge' ) {
                      $notationDisplay
@@ -1114,7 +960,7 @@
                         .append( generateDiffList( lastDiff ) );
                      stopRecordingChallenge();
                   }
-                  else {   // for sequence only
+                  else {
                      $commentEntry.attr( 'placeholder', 'Enter optional note for step ' + me.state.recording.length );                  
                      $notationDisplay.html( generateDiffList( lastDiff ) );
                   }                
@@ -1122,7 +968,6 @@
 
                if ( me.state.isDeleting ) me.state.isDeleting = false;
 
-               // For challenge (only) in learner mode
                if ( me.state.challengeStarted && ! me.state.challengeFinished && me.state.exerciseType === 'Challenge' && !me.editable ) {
                   me.state.challengeFinished = true;
                   lastDiff = objectDiff( oldPos, newPos );
@@ -1143,11 +988,10 @@
             toggleAuthorLearner : toggleAuthorLearner,
             chessPieceMoveEvent : handleChessPieceMoveEvent
          };
-      }()         // end view
+      }()
    });
 
 
-   //add some common methods
    _.extend(Proto, BaseCompMethods);
 
    document.registerElement('vs-chess', {
