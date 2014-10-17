@@ -412,7 +412,8 @@
                         if ( isAuthorMode ) {
                            learnerControls.hide();
                            _section3.$el.find( '.comment' ).remove();
-                           _section3.$el.find( '#challengeBox' ).text( 'Challenge Solution' ); 
+                           _section3.$el.find( '#challengeBox' ).text( 'Challenge Solution' );
+                           me.state.challengeStarted = false;  // in case there was a switch to author mode in the middle of a challenge
                         } 
                         else {                                       // --==> Challenge Created, LEARNER mode
                            if ( ! me.state.challengeStarted ) {
@@ -432,7 +433,7 @@
                                  me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording
                                  btn.off().text( 'waiting for your move...' );
                                  _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
-                                 _section3.$el.find( '#challengeBox' ).text( 'Your move' );     // instead of "Challenge Solution"
+                                 _section3.$el.find( '#challengeBox' ).text( 'Your move' );
                                  me.state.challengeStarted = true;  
                               }, 'color-green', '170px' );
 
@@ -441,7 +442,7 @@
                            }
 
                            _section2.$el.empty().append( '<span class="comment">' + ( me.state.recording[0].comment || " " )  + '</span>' );
-                           _section3.$el.find( '#challengeBox' ).text( '' );     // instead of "Challenge Solution"
+                           _section3.$el.find( '#challengeBox' ).text( '' );
                            $notationDisplay.empty().append( '<p id="movements"><span id="move0" class="move chicklet1 rounded ">0.start</span></p>' );                           
                            _section3.$el.find( '.comment' ).remove();
                         }
@@ -803,6 +804,8 @@
 /*  
 * The end of sequence stuff, now the challenge...
 */
+
+            // initChallenge - called in learner mode after challenge has been created by author.
             initChallenge = function() {
                var challenges = [{
                      answers: me.state.recording[1].pos,       // This contains the correct answer to the challenge
@@ -822,7 +825,8 @@
                      me.state.challengeStarted = false;
                      me.state.challengeFinished = false;
 
-                     _section1.$el.find( '#try' ).text( 'retry challenge' ); // .css( 'background', '#3a968a' );
+                     _section1.$el.find( '#try' ).text( 'retry challenge' );
+
                      makeStdButton( _section1.$el.find( '#try' ), function( btn ) {
                         me.board.setPosition( me.state.recording[0].pos );     // position board to 1st frame in recording                                  
                         btn.off().text( 'waiting for your move...' );

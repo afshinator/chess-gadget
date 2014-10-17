@@ -24,7 +24,7 @@ cd vs-chess && npm install && bower install && grunt && cd ..
 - The gadget consists of a custom element with some helper functions
 - The ```<vs-chess></vs-chess>``` custom element implements embedding the board from chessboard.js
 - The gadget.js helps communicating between the ```<vs-chess></vs-chess>``` custom element and the Versal platform
-- The main functionality for Learners/Viewers is in **vs-chess/scripts/compo.js**, it should be probably be broken out into different files soon.
+- The main functionality for Learners/Viewers is in **vs-chess/scripts/compo.js**, it should probably be broken out into different files.
 
 ## Versal platform details - To push to production
 - Need to reduce the number of HTTP requests by running ```grunt``` which runs ```vulcanize```. Vulcanize concatenates a set of Web Components into one file.
@@ -35,4 +35,6 @@ cd vs-chess && grunt
 - Step two, inside index.html, import the ```<vs-chess></vs-chess>``` element from vs-chess/dist/vs-chess.html instead of vs-chess/vs-chess.html
 
 ## Note
+- The [original port of chessboard.js by Versal](https://github.com/Versal/chess-gadget)
 - More information about [custom elements](http://webcomponents.org/)
+
