@@ -17,7 +17,7 @@
     this.vi = new VersalPlayerAPI();
     this.addChildrenEvents();
     this.addConfigAndEditableEvents();
-    this.setHeightAndPropertySheet();
+    this.setHeightAndPropertySheet();  
     this.vi.startListening();
   };
 
@@ -46,8 +46,7 @@
 
   Gadget.prototype.setHeightAndPropertySheet = function() {
     this.vi.setHeight(470);
-
-    this.vi.setPropertySheetAttributes( propSheetControls );
+    this.vi.setPropertySheetAttributes( propSheetControls );    
   };
 
   window.addEventListener('WebComponentsReady', function() {

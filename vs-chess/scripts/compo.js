@@ -30,7 +30,7 @@
          this.view.init( this );                        // initialize the UI component
 
          // this.config contains authors persisted exercise info from Versal platform
-         if ( this.config.exerciseType !== undefined && this.config.exerciseType !== null ) {
+         if ( this.config && this.config.exerciseType !== undefined && this.config.exerciseType !== null ) {
             this.state.exerciseType = this.config.exerciseType;
             this.state.exerciseCreated = true;
             this.state.recording = this.config.recording;
@@ -67,6 +67,7 @@
       },
 
       persistToVSPlayer: function( obj ) {
+         // Persist stuff like: exercise was created, which exercise, the recorded exercise
          this.trigger('vs-chess:change', obj );
       },
 

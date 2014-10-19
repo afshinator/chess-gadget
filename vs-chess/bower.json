@@ -1,8 +1,10 @@
 {
   "name": "vs-chess",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "",
-  "authors": [],
+  "authors": [
+    "Afshin Mokhtari <afshinator@gmail.com>"
+  ],
   "description": "vs-chess",
   "license": "All rights reserved",
   "private": true,
